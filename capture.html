@@ -10,22 +10,87 @@
 			font-family: 'Helvetica', 'Arial', sans-serif;
 		}
 
-		#back {
+		.grip {
+			background-size: cover;
+			background: url("data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHdpZHRoPSI1IiBoZWlnaHQ9IjUiPgo8cmVjdCB3aWR0aD0iMSIgaGVpZ2h0PSIxIiBmaWxsPSIjODg4Ij48L3JlY3Q+Cjwvc3ZnPg==");
+			cursor: grab;
+			cursor: -webkit-grab;
+			width: 200px;
+			height: 50px;
+		}
+
+		#borderBox {
 			background: rgba(0, 0, 0, 0.1);
 			position: absolute;
 			top: 0;
 			left: 0;
 			right: 0;
 			bottom: 0;
-			border: 2px solid green;
+			border: 2px solid darkgreen;
+			pointer-events: none;
+		}
+
+		.optionButton {
+			margin-bottom: 10px;
+			line-height: 20px;
+			text-align: center;
+			padding: 5px;
+			font-weight: bold;
+			width: 150px;
+			height: 20px;
+			cursor: pointer;
+			user-select: none;
+			border-radius: 10px;
+		}
+
+		.deviceButton {
+			color: grey;
+			background: white;
+			border: grey 2px solid;
+			min-height: 35px;
+			font-size: 12px;
+			min-width: 165px;
+			appearance: none;
+		}
+
+		.deviceButton:focus {
+			outline: none;
+		}
+
+		.deviceButton:hover {
+			background: grey;
+			color: white;
+			border: grey 2px solid;
+		}
+
+		#quit {
+			color: black;
+			background: white;
+			border: black 2px solid;
+		}
+
+		#quit:hover {
+			color: white;
+			background: black;
+		}
+
+		#record {
+			color: red;
+			background: white;
+			border: red 2px solid;
+		}
+
+		#record:hover {
+			color: white;
+			background: red;
 		}
 
 		#corner {
-    		cursor: nwse-resize;
+			cursor: nwse-resize;
 			user-select: none;
 			color: white;
 			position: absolute;
-			background: green;
+			background: darkgreen;
 			right: 0;
 			bottom: 0;
 			width: 10px;
@@ -35,60 +100,43 @@
 		}
 
 		#drag {
-    		cursor: grab;
+			cursor: grab;
 			user-select: none;
 			color: white;
 			-webkit-app-region: drag;
 			position: absolute;
-			background: green;
+			background: darkgreen;
 			right: 0;
 			top: 0;
 			width: 100px;
 			height: 20px;
 			text-align: center;
 			padding: 5px;
-		}
-
-		#quit {
-			cursor: pointer;
-			user-select: none;
-			color: white;
-			position: absolute;
-			background: black;
-			left: 0;
-			bottom: 0;
-			width: 150px;
-			height: 20px;
-			text-align: center;
-			padding: 5px;
-		}
-
-		#record {
-			cursor: pointer;
-			user-select: none;
-			color: white;
-			position: absolute;
-			background: red;
-			left: 0;
-			top: 0;
-			width: 150px;
-			height: 20px;
-			text-align: center;
-			padding: 5px;
+			overflow: hidden;
 		}
 
 		#stop {
-			cursor: pointer;
-			user-select: none;
-			color: white;
 			position: absolute;
-			background: red;
+			color: red;
+			background: white;
+			border: red 2px solid;
 			left: 0;
 			top: 0;
-			width: 150px;
-			height: 20px;
-			text-align: center;
-			padding: 5px;
+		}
+
+		#stop:hover {
+			color: white;
+			background: red;
+		}
+
+		#controls {
+			position: absolute;
+			left: 50%;
+			top: 50%;
+			transform: translate(-50%, -50%);
+			display: flex;
+			flex-direction: column;
+			height: 200px;
 		}
 
 		#counter {
@@ -105,26 +153,35 @@
 
 <body style="width: 100%; height: 100%; margin: 2px; overflow: hidden;">
 	<div id="stopcontrols">
-		<div id="stop">
+		<div id="stop" class="optionButton">
 			Stop Recording
 		</div>
 	</div>
 	<div id="startcontrols">
-		<div id="back"></div>
 		<div id="drag">
-			Drag
-		</div>
-		<div id="record">
-			Start Recording
-		</div>
-		<div id="quit">
-			Exit
+			<div class="grip"></div>
 		</div>
 		<div id="corner">
+			<div class="grip"></div>
+		</div>
+
+		<div id="controls">
+			<div id="record" class="optionButton">
+				Start Recording
+			</div>
+			<select id="microphone" class="optionButton deviceButton">
+			</select>
+			<select id="camera" class="optionButton deviceButton">
+			</select>
+			<div id="quit" class="optionButton">
+				Exit
+			</div>
 		</div>
 		<div id="counter">
 		</div>
-		<script src="capture.js"></script>
+		<div id="borderBox"></div>
+	</div>
+	<script src="capture.js"></script>
 </body>
 
 </html>

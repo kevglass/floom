@@ -23,7 +23,8 @@
       "video.js",
       "capture.js",
       "video.html",
-      "capture.html"
+      "capture.html",
+      "indicator.html"
     ],
     "mac": {
       "hardenedRuntime": false,

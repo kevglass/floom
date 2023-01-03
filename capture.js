@@ -14,6 +14,11 @@ let offsetY;
 const startControls = document.getElementById("startcontrols");
 const stopControls = document.getElementById("stopcontrols");
 const counter = document.getElementById("counter");
+const controls = document.getElementById("controls");
+const audioInputSelect = document.getElementById("microphone");
+const videoSelect = document.getElementById("camera");
+const selectors = [audioInputSelect, videoSelect];
+
 let countdown = 0;
 
 stopControls.style.display = "none";
@@ -53,30 +58,22 @@ ipcRenderer.on('SET_SOURCE', async (event, sourceId) => {
     }
 })
 
+function handleEnumError(e) {
+    console.log(e);
+}
+
 function handleError(e) {
     console.log(e);
     alert("Failed to get screen stream!");
 }
 
-if (navigator.mediaDevices.getUserMedia) {
-    navigator.mediaDevices.getUserMedia({ audio: true })
-        .then(function (stream) {
-            audioStream = stream;
-        })
-        .catch(function (e) {
-            console.log("Something went wrong!");
-            console.log(e);
-            alert("Failed to get audio stream!");
-        });
-}
-
 function handleDataAvailable(event) {
     if (event.data.size > 0) {
         recordedChunks.push(event.data);
-    } 
+    }
 }
 
-async function save() {  
+async function save() {
     const blob = new Blob(recordedChunks, {
         type: "video/webm"
     });
@@ -85,7 +82,7 @@ async function save() {
     document.body.appendChild(a);
     a.style = "display: none";
     a.href = url;
-    a.download = "recording-"+(Date.now())+".webm";
+    a.download = "recording-" + (Date.now()) + ".webm";
     a.click();
     window.URL.revokeObjectURL(url);
 }
@@ -99,6 +96,7 @@ function copyFrame() {
 }
 
 function startRecording() {
+    controls.style.display = "none";
     if (countdown === 0) {
         countdown = 5;
         showCountdownOrStart();
@@ -150,6 +148,7 @@ function startRecordingStreams() {
 }
 
 function stopRecording() {
+    controls.style.display = "flex";
     counter.innerHTML = "";
     startControls.style.display = "initial";
     stopControls.style.display = "none";
@@ -161,3 +160,66 @@ function stopRecording() {
         save();
     }, 1000);
 }
+
+function gotDevices(deviceInfos) {
+    // Handles being called several times to update labels. Preserve values.
+    const values = selectors.map(select => select.value);
+    selectors.forEach(select => {
+        while (select.firstChild) {
+            select.removeChild(select.firstChild);
+        }
+    });
+    for (let i = 0; i !== deviceInfos.length; ++i) {
+        const deviceInfo = deviceInfos[i];
+        const option = document.createElement('option');
+        option.value = deviceInfo.deviceId;
+        if (deviceInfo.kind === 'audioinput') {
+            option.text = deviceInfo.label || `microphone ${audioInputSelect.length + 1}`;
+            audioInputSelect.appendChild(option);
+        } else if (deviceInfo.kind === 'videoinput') {
+            option.text = deviceInfo.label || `camera ${videoSelect.length + 1}`;
+            videoSelect.appendChild(option);
+        } else {
+            console.log('Some other kind of source/device: ', deviceInfo);
+        }
+    }
+    selectors.forEach((select, selectorIndex) => {
+        if (Array.prototype.slice.call(select.childNodes).some(n => n.value === values[selectorIndex])) {
+            select.value = values[selectorIndex];
+        }
+    });
+}
+
+
+function start() {
+    const videoSource = videoSelect.value;
+    ipcRenderer.send("changeVideo", videoSource);
+    if (audioStream) {
+        audioStream.getTracks().forEach(track => {
+            track.stop();
+        });
+    }
+    const audioSource = audioInputSelect.value;
+    if (navigator.mediaDevices.getUserMedia) {
+        navigator.mediaDevices.getUserMedia({ 
+            audio: { deviceId: audioSource ? { exact: audioSource } : undefined },
+        })
+            .then(function (stream) {
+                console.log("Got new audio stream");
+                audioStream = stream;
+            })
+            .catch(function (e) {
+                console.log("Something went wrong!");
+                console.log(e);
+                alert("Failed to get audio stream!");
+            });
+    }
+}
+
+
+navigator.mediaDevices.enumerateDevices().then(gotDevices).catch(handleEnumError);
+
+audioInputSelect.onchange = start;
+videoSelect.onchange = start;
+
+start();
