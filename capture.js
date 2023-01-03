@@ -27,6 +27,10 @@ document.getElementById("stop").addEventListener("click", () => {
     stopRecording();
 });
 
+document.getElementById("quit").addEventListener("click", () => {
+    ipcRenderer.send("quit");
+});
+
 ipcRenderer.on('SET_SOURCE', async (event, sourceId) => {
     try {
         const stream = await navigator.mediaDevices.getUserMedia({

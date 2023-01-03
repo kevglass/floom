@@ -1,4 +1,4 @@
-const {app, BrowserWindow, ipcMain, screen} = require('electron')
+const { app, BrowserWindow, ipcMain, screen, systemPreferences } = require('electron')
 const { desktopCapturer } = require('electron')
 
 let videoWindow;
@@ -9,6 +9,7 @@ let oldX;
 let oldY;
 
 function createWindow() {
+
 	videoWindow = new BrowserWindow({
 		width: 200,
 		height: 200,
@@ -36,6 +37,10 @@ function createWindow() {
 
 	videoWindow.show();
 
+	ipcMain.on('quit', function() {
+		app.exit(0);
+	});
+
 	ipcMain.on('startRecording', function() {
 		oldWidth = captureWindow.getSize()[0];
 		oldHeight = captureWindow.getSize()[1];
@@ -53,6 +58,9 @@ function createWindow() {
 		captureWindow.setSize(oldWidth,oldHeight);
 		captureWindow.setPosition(oldX, oldY);
 	});
+
+	systemPreferences.askForMediaAccess("camera");
+	systemPreferences.askForMediaAccess("microphone");
 
 	captureWindow.webContents.on('did-finish-load', function() {
 		desktopCapturer.getSources({ types: ['screen'] }).then(async sources => {

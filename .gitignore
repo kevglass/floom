@@ -1,2 +1,5 @@
 node_modules
 *.webm
+elevate.exe
+dist
+dist-x64
