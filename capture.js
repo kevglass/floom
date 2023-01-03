@@ -19,7 +19,6 @@ let countdown = 0;
 stopControls.style.display = "none";
 
 document.getElementById("record").addEventListener("click", () => {
-    alert("Starting recording");
     startRecording();
 });
 

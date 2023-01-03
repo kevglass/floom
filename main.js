@@ -52,14 +52,15 @@ function createWindow() {
 
 		captureWindow.setSize(200,40);
 		captureWindow.setPosition(size.width - 200, 40);
+		captureWindow.setAlwaysOnTop(true, 'status');
 	});
 
 	ipcMain.on('stopRecording', function() {
 		captureWindow.setSize(oldWidth,oldHeight);
 		captureWindow.setPosition(oldX, oldY);
+		captureWindow.setAlwaysOnTop(true, 'status');
 	});
 
-	console.log("platform: " + os.platform());
 	if (os.platform() === "darwin") {
 		systemPreferences.askForMediaAccess("camera");
 		systemPreferences.askForMediaAccess("microphone");
