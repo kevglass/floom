@@ -15,7 +15,7 @@ let offsetY;
 const startControls = document.getElementById("startcontrols");
 const stopControls = document.getElementById("stopcontrols");
 const counter = document.getElementById("counter");
-let countdown;
+let countdown = 0;
 
 stopControls.style.display = "none";
 
@@ -71,13 +71,18 @@ function handleDataAvailable(event) {
     } 
 }
 
-async function save() {
+async function save() {  
     const blob = new Blob(recordedChunks, {
         type: "video/webm"
     });
-    const buffer = Buffer.from( await blob.arrayBuffer() );
-    fs.writeFileSync("recorded.webm", buffer);
-    alert("Recording Saved");
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement("a");
+    document.body.appendChild(a);
+    a.style = "display: none";
+    a.href = url;
+    a.download = "recording-"+(Date.now())+".webm";
+    a.click();
+    window.URL.revokeObjectURL(url);
 }
 
 function copyFrame() {
@@ -89,8 +94,10 @@ function copyFrame() {
 }
 
 function startRecording() {
-    countdown = 5;
-    showCountdownOrStart();
+    if (countdown === 0) {
+        countdown = 5;
+        showCountdownOrStart();
+    }
 }
 
 function showCountdownOrStart() {

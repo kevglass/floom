@@ -1,4 +1,4 @@
-const {app, BrowserWindow, ipcMain} = require('electron')
+const {app, BrowserWindow, ipcMain, screen} = require('electron')
 const { desktopCapturer } = require('electron')
 
 let videoWindow;
@@ -37,18 +37,19 @@ function createWindow() {
 	videoWindow.show();
 
 	ipcMain.on('startRecording', function() {
-		console.log("startRecording");
 		oldWidth = captureWindow.getSize()[0];
 		oldHeight = captureWindow.getSize()[1];
 		oldX = captureWindow.getPosition()[0];
 		oldY = captureWindow.getPosition()[1];
 
+		const primaryDisplay = screen.getPrimaryDisplay()
+		const size = primaryDisplay.workAreaSize
+
 		captureWindow.setSize(200,40);
-		captureWindow.setPosition(0, 0);
+		captureWindow.setPosition(size.width - 200, 40);
 	});
 
 	ipcMain.on('stopRecording', function() {
-		console.log("stopRecording");
 		captureWindow.setSize(oldWidth,oldHeight);
 		captureWindow.setPosition(oldX, oldY);
 	});
