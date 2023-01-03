@@ -11,6 +11,10 @@ $8 a month for the record section of the screen feature!
 1) Install NPM - https://docs.npmjs.com/downloading-and-installing-node-js-and-npm
 2) Install Dependences - ```npm install```
 
+Or if you want binaries (note I used electron-builder to get these, so I can only really test the mac ones)
+
+https://cokeandcode.com/floom/
+
 ## To Run
 
 ```npm run start```
