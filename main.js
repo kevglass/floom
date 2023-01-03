@@ -52,13 +52,17 @@ function createWindow() {
 
 		captureWindow.setSize(200,40);
 		captureWindow.setPosition(size.width - 200, 40);
-		captureWindow.setAlwaysOnTop(true, 'status');
+		setTimeout(() => {
+			captureWindow.setAlwaysOnTop(true, 'status');
+		}, 1000);
 	});
 
 	ipcMain.on('stopRecording', function() {
 		captureWindow.setSize(oldWidth,oldHeight);
 		captureWindow.setPosition(oldX, oldY);
-		captureWindow.setAlwaysOnTop(true, 'status');
+		setTimeout(() => {
+			captureWindow.setAlwaysOnTop(true, 'status');
+		}, 1000);
 	});
 
 	if (os.platform() === "darwin") {
