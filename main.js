@@ -1,5 +1,6 @@
 const { app, BrowserWindow, ipcMain, screen, systemPreferences } = require('electron')
 const { desktopCapturer } = require('electron')
+const os = require('os');
 
 let videoWindow;
 let captureWindow;
@@ -9,7 +10,6 @@ let oldX;
 let oldY;
 
 function createWindow() {
-
 	videoWindow = new BrowserWindow({
 		width: 200,
 		height: 200,
@@ -34,13 +34,13 @@ function createWindow() {
 	captureWindow.setAlwaysOnTop(true, 'status');
 	captureWindow.loadFile("capture.html");
 	captureWindow.show();
-
 	videoWindow.show();
 
 	ipcMain.on('quit', function() {
 		app.exit(0);
 	});
 
+	console.log("setting up hooks");
 	ipcMain.on('startRecording', function() {
 		oldWidth = captureWindow.getSize()[0];
 		oldHeight = captureWindow.getSize()[1];
@@ -59,12 +59,17 @@ function createWindow() {
 		captureWindow.setPosition(oldX, oldY);
 	});
 
-	systemPreferences.askForMediaAccess("camera");
-	systemPreferences.askForMediaAccess("microphone");
+	console.log("platform: " + os.platform());
+	if (os.platform() === "darwin") {
+		systemPreferences.askForMediaAccess("camera");
+		systemPreferences.askForMediaAccess("microphone");
+	}
 
 	captureWindow.webContents.on('did-finish-load', function() {
+		console.log("Trying to get screen stream");
 		desktopCapturer.getSources({ types: ['screen'] }).then(async sources => {
 		  for (const source of sources) {
+			console.log("Sending screen stream");
 			captureWindow.webContents.send('SET_SOURCE', source.id)
 			break;
 		  }

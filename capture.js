@@ -1,5 +1,4 @@
-const { ipcRenderer } = require('electron')
-const fs = require("fs");
+const { ipcRenderer } = require('electron');
 
 let screenStream;
 let audioStream;
@@ -20,6 +19,7 @@ let countdown = 0;
 stopControls.style.display = "none";
 
 document.getElementById("record").addEventListener("click", () => {
+    alert("Starting recording");
     startRecording();
 });
 
@@ -30,6 +30,8 @@ document.getElementById("stop").addEventListener("click", () => {
 document.getElementById("quit").addEventListener("click", () => {
     ipcRenderer.send("quit");
 });
+
+console.log("Register handler for set source");
 
 ipcRenderer.on('SET_SOURCE', async (event, sourceId) => {
     try {

@@ -1,11 +1,12 @@
 {
   "name": "floom",
-  "version": "1.0.0",
+  "version": "1.0.1",
   "description": "",
   "main": "main.js",
   "scripts": {
     "start": "electron main.js",
     "compile": "electron-builder --dir",
+    "beta": "rm -rf dist; electron-builder -w --x64",
     "dist": "rm -rf dist; electron-builder -mwl --x64; mv dist dist-x64; electron-builder -mwl"
   },
   "author": "",
