@@ -9,6 +9,7 @@ let oldWidth;
 let oldHeight;
 let oldX;
 let oldY;
+let currentDisplay;
 
 function createWindow() {
 	videoWindow = new BrowserWindow({
@@ -80,15 +81,16 @@ function createWindow() {
 		oldX = captureWindow.getPosition()[0];
 		oldY = captureWindow.getPosition()[1];
 
-		const primaryDisplay = screen.getPrimaryDisplay()
-		const size = primaryDisplay.workAreaSize
+		const bounds = captureWindow.getBounds();
+		const nowDisplay = screen.getDisplayNearestPoint({x: bounds.x, y: bounds.y});
+		const size = nowDisplay.workAreaSize;
 
 		indicatorWindow.setSize(oldWidth + 20, oldHeight+20);
 		indicatorWindow.setPosition(oldX - 10, oldY - 10);
 		indicatorWindow.show();
 
 		captureWindow.setSize(200,40);
-		captureWindow.setPosition(size.width - 200, 40);
+		captureWindow.setPosition(oldX + ((oldWidth - 200) / 2), oldY - 50);
 		setTimeout(() => {
 			captureWindow.setAlwaysOnTop(true, "status");
 		}, 1000);
@@ -111,16 +113,38 @@ function createWindow() {
 		systemPreferences.askForMediaAccess("microphone");
 	}
 
+    captureWindow.on("move", () => {
+		captureCurrentScreen();
+
+		if (currentDisplay) {
+			captureWindow.webContents.send("position", captureWindow.getPosition()[0] - currentDisplay.bounds.x, captureWindow.getPosition()[1] - currentDisplay.bounds.y);
+		}
+    });
+
 	captureWindow.webContents.on("did-finish-load", function() {
+		captureCurrentScreen();
+		captureWindow.webContents.send("position", captureWindow.getPosition()[0], captureWindow.getPosition()[1]);
+	});
+}
+
+function captureCurrentScreen() {
+	const bounds = captureWindow.getBounds();
+	const nowDisplay = screen.getDisplayNearestPoint({x: bounds.x, y: bounds.y});
+
+	if (nowDisplay.id !== currentDisplay?.id) {
+		currentDisplay = nowDisplay;
+
 		console.log("Trying to get screen stream");
 		desktopCapturer.getSources({ types: ["screen"] }).then(async sources => {
-		  for (const source of sources) {
-			console.log("Sending screen stream");
-			captureWindow.webContents.send("SET_SOURCE", source.id)
-			break;
-		  }
+			for (const source of sources) {
+				if (currentDisplay.id === parseInt(source.display_id)) {
+					console.log("Sending screen stream");
+					captureWindow.webContents.send("SET_SOURCE", source.id)
+					break;
+				}
+			}
 		})
-	});
+	}
 }
 
 app.whenReady().then(() => {

@@ -37,8 +37,21 @@ document.getElementById("quit").addEventListener("click", () => {
 
 console.log("Register handler for set source");
 
+ipcRenderer.on("position", async (event, x, y) => {
+    if (!recording) {
+        offsetX = x;
+        offsetY = y;
+    }
+});
+
 ipcRenderer.on('SET_SOURCE', async (event, sourceId) => {
     try {
+        if (screenStream) {
+            screenStream.getTracks().forEach(track => {
+                track.stop();
+            });
+        }
+
         const stream = await navigator.mediaDevices.getUserMedia({
             audio: false,
             video: {
@@ -125,9 +138,6 @@ function startRecordingStreams() {
     canvas.width = window.innerWidth;
     canvas.height = window.innerHeight;
     ctx = canvas.getContext("2d");
-    offsetX = window.screenX;
-    offsetY = window.screenY;
-
     video.requestVideoFrameCallback(copyFrame);
 
     const cutStream = canvas.captureStream(60);
