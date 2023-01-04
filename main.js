@@ -1,4 +1,4 @@
-const { app, BrowserWindow, ipcMain, screen, systemPreferences } = require("electron")
+const { app, BrowserWindow, ipcMain, screen, systemPreferences, globalShortcut } = require("electron")
 const { desktopCapturer } = require("electron")
 const os = require("os");
 
@@ -10,6 +10,7 @@ let oldHeight;
 let oldX;
 let oldY;
 let currentDisplay;
+let prefullScreenBounds;
 
 function createWindow() {
 	videoWindow = new BrowserWindow({
@@ -67,6 +68,23 @@ function createWindow() {
 	videoWindow.setPosition(captureWindow.getPosition()[0] + 20, captureWindow.getPosition()[1] + 400);
 	videoWindow.show();
 
+	ipcMain.on("fullscreen", function() {
+		const bounds = captureWindow.getBounds();
+
+		if ((currentDisplay.bounds.x !== bounds.x || currentDisplay.bounds.y !== bounds.y || currentDisplay.bounds.height !== bounds.height || currentDisplay.bounds.width !== bounds.width)) {
+			prefullScreenBounds = bounds;
+
+			captureWindow.setPosition(currentDisplay.bounds.x,currentDisplay.bounds.y);
+			captureWindow.setSize(currentDisplay.bounds.width, currentDisplay.bounds.height);
+		} else {
+			captureWindow.setPosition(prefullScreenBounds.x,prefullScreenBounds.y);
+			captureWindow.setSize(prefullScreenBounds.width, prefullScreenBounds.height);
+		}
+
+		captureCurrentScreen();
+		captureWindow.webContents.send("position", captureWindow.getPosition()[0] - currentDisplay.bounds.x, captureWindow.getPosition()[1] - currentDisplay.bounds.y);
+	});
+
 	ipcMain.on("quit", function() {
 		app.exit(0);
 	});
@@ -83,14 +101,13 @@ function createWindow() {
 
 		const bounds = captureWindow.getBounds();
 		const nowDisplay = screen.getDisplayNearestPoint({x: bounds.x, y: bounds.y});
-		const size = nowDisplay.workAreaSize;
 
 		indicatorWindow.setSize(oldWidth + 20, oldHeight+20);
 		indicatorWindow.setPosition(oldX - 10, oldY - 10);
 		indicatorWindow.show();
 
 		captureWindow.setSize(200,40);
-		captureWindow.setPosition(oldX + ((oldWidth - 200) / 2), oldY - 50);
+		captureWindow.setPosition(Math.floor(oldX + ((oldWidth - 200) / 2)), Math.max(-35, Math.floor(oldY - 50)));
 		setTimeout(() => {
 			captureWindow.setAlwaysOnTop(true, "status");
 		}, 1000);
@@ -150,6 +167,10 @@ function captureCurrentScreen() {
 app.whenReady().then(() => {
   createWindow()
   
+  globalShortcut.register('Shift+Escape', () => {
+	captureWindow.webContents.send("doStop");
+  })
+
   app.on("activate", function () {
     if (BrowserWindow.getAllWindows().length === 0) createWindow()
   })

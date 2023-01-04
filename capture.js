@@ -23,6 +23,10 @@ let countdown = 0;
 
 stopControls.style.display = "none";
 
+document.getElementById("drag").addEventListener("dblclick", () => {
+    ipcRenderer.send("fullscreen");
+});
+
 document.getElementById("record").addEventListener("click", () => {
     startRecording();
 });
@@ -36,6 +40,10 @@ document.getElementById("quit").addEventListener("click", () => {
 });
 
 console.log("Register handler for set source");
+
+ipcRenderer.on("doStop", async (event, x, y) => {
+    this.stopRecording();
+});
 
 ipcRenderer.on("position", async (event, x, y) => {
     if (!recording) {
@@ -66,6 +74,7 @@ ipcRenderer.on('SET_SOURCE', async (event, sourceId) => {
             }
         })
         screenStream = stream;
+        console.log("Got screen stream: " + stream);
     } catch (e) {
         handleError(e)
     }
