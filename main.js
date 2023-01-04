@@ -17,6 +17,7 @@ function createWindow() {
 		title: "Floom Video",
 		width: 200,
 		height: 200,
+		show: false,
 		transparent: true,
 		frame: false,
 		skipTaskbar: true,
@@ -66,7 +67,6 @@ function createWindow() {
 	captureWindow.show();
 
 	videoWindow.setPosition(captureWindow.getPosition()[0] + 20, captureWindow.getPosition()[1] + 400);
-	videoWindow.show();
 
 	ipcMain.on("fullscreen", function() {
 		const bounds = captureWindow.getBounds();
@@ -89,31 +89,44 @@ function createWindow() {
 		app.exit(0);
 	});
 
-	console.log("setting up hooks");
 	ipcMain.on("changeVideo", function(event, sourceId) {
+		if (sourceId === "none") {
+			videoWindow.hide();
+		} else {
+			videoWindow.show();
+		}
 		videoWindow.webContents.send("device", sourceId);
 	});
-	ipcMain.on("startRecording", function() {
-		oldWidth = captureWindow.getSize()[0];
-		oldHeight = captureWindow.getSize()[1];
-		oldX = captureWindow.getPosition()[0];
-		oldY = captureWindow.getPosition()[1];
 
+	ipcMain.on("preRecording", function() {
 		const bounds = captureWindow.getBounds();
-		const nowDisplay = screen.getDisplayNearestPoint({x: bounds.x, y: bounds.y});
+		oldWidth = bounds.width;
+		oldHeight = bounds.height;
+		oldX = bounds.x;
+		oldY = bounds.y;
 
 		indicatorWindow.setSize(oldWidth + 20, oldHeight+20);
 		indicatorWindow.setPosition(oldX - 10, oldY - 10);
 		indicatorWindow.show();
+		setTimeout(() => {
+			indicatorWindow.setAlwaysOnTop(true, "status");
+		}, 100);
+	});
+
+	ipcMain.on("startRecording", function() {
+		const bounds = captureWindow.getBounds();
+		oldWidth = bounds.width;
+		oldHeight = bounds.height;
+		oldX = bounds.x;
+		oldY = bounds.y;
 
 		captureWindow.setSize(200,40);
 		captureWindow.setPosition(Math.floor(oldX + ((oldWidth - 200) / 2)), Math.max(-35, Math.floor(oldY - 50)));
+
+
 		setTimeout(() => {
 			captureWindow.setAlwaysOnTop(true, "status");
-		}, 1000);
-		setTimeout(() => {
-			indicatorWindow.setAlwaysOnTop(true, "status");
-		}, 1000);
+		}, 100);
 	});
 
 	ipcMain.on("stopRecording", function() {

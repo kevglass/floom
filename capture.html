@@ -10,6 +10,10 @@
 			font-family: 'Helvetica', 'Arial', sans-serif;
 		}
 
+		.outline {
+			text-shadow: -1px -1px 0 #000, 1px -1px 0 #000, -1px 1px 0 #000, 1px 1px 0 #000;
+		}
+
 		.grip {
 			background-size: cover;
 			background: url("data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHdpZHRoPSI1IiBoZWlnaHQ9IjUiPgo8cmVjdCB3aWR0aD0iMSIgaGVpZ2h0PSIxIiBmaWxsPSIjODg4Ij48L3JlY3Q+Cjwvc3ZnPg==");
@@ -79,6 +83,19 @@
 		#quit:hover {
 			color: white;
 			background: black;
+		}
+
+		#cancel {
+			color: red;
+			background: white;
+			border: red 2px solid;
+			margin-left: auto;
+			margin-right: auto;
+		}
+		
+		#cancel:hover {
+			color: white;
+			background: red;
 		}
 
 		#record {
@@ -184,11 +201,16 @@
 			<div id="quit" class="optionButton">
 				Exit
 			</div>
-			<div id="info">
+			<div id="info" class="outline">
 				Press Shift+Escape to stop recording
 			</div>
 		</div>
-		<div id="counter">
+		<div id="starting">
+			<div id="counter" class="outline">
+			</div>
+			<div id="cancel" class="optionButton">
+				Cancel
+			</div>
 		</div>
 		<div id="borderBox"></div>
 	</div>
