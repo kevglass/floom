@@ -4,6 +4,14 @@
         <meta charset="UTF-8">
         <script src="https://kit.fontawesome.com/f7a111bc01.js" crossorigin="anonymous"></script>
         <style>
+            #drag {
+                position: absolute;
+                bottom: 40px;
+                top: 0px;
+                left: 0px;
+                right: 0px;
+            }
+
             canvas {
                 margin-left: auto;
                 margin-right: auto;
@@ -41,7 +49,9 @@
         </style>
     </head>
     <body style="margin: 0; width: 100vw; height: 100vh; overflow: hidden;">
-        <canvas id="canvas" width="180" height="180" style="-webkit-app-region: drag; border-radius: 50%; object-fit:cover; width: 180px; height: 180px">
+        <div id="drag" style="-webkit-app-region: drag;">
+        </div>
+        <canvas id="canvas" width="180" height="180" style="border-radius: 50%; object-fit:cover; width: 180px; height: 180px">
         </canvas>
         <div id="controls">
             <div id="scale" class="control">
