@@ -202,14 +202,25 @@ function startRecordingStreams() {
         recordedChunks = [];
         const options = { mimeType: "video/webm; codecs=vp9" };
         const tracks = [];
+
         tracks.push(cutStream.getVideoTracks()[0]);
+
+        const audioContext = new AudioContext();
+        const audioStreamDestination = audioContext.createMediaStreamDestination();
+
         if (audioStream) {
-            tracks.push(audioStream.getAudioTracks()[0]);
+            audioContext.createMediaStreamSource(new MediaStream(audioStream.getAudioTracks())).connect(audioStreamDestination);
+            //tracks.push(audioStream.getAudioTracks()[0]);
         }
         if (systemAudioStream) {
-            tracks.push(systemAudioStream.getAudioTracks()[0]);
+            audioContext.createMediaStreamSource(new MediaStream(systemAudioStream.getAudioTracks())).connect(audioStreamDestination);
+            //tracks.push(systemAudioStream.getAudioTracks()[0]);
         }
 
+        if (audioStreamDestination.stream.getAudioTracks().length > 0) {
+            tracks.push(audioStreamDestination.stream.getAudioTracks()[0]);
+        }
+        
         const combinedStream = new MediaStream(tracks);
         mediaRecorder = new MediaRecorder(combinedStream, options);
 
