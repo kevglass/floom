@@ -114,6 +114,8 @@ function createWindow() {
 	});
 
 	ipcMain.on("startRecording", function() {
+		videoWindow.webContents.send("startRecording");
+		
 		const bounds = captureWindow.getBounds();
 		oldWidth = bounds.width;
 		oldHeight = bounds.height;
@@ -130,6 +132,8 @@ function createWindow() {
 	});
 
 	ipcMain.on("stopRecording", function() {
+		videoWindow.webContents.send("stopRecording");
+
 		indicatorWindow.hide();
 		captureWindow.setSize(oldWidth,oldHeight);
 		captureWindow.setPosition(oldX, oldY);

@@ -2,11 +2,54 @@
 <html>
     <head>
         <meta charset="UTF-8">
+        <script src="https://kit.fontawesome.com/f7a111bc01.js" crossorigin="anonymous"></script>
+        <style>
+            canvas {
+                margin-left: auto;
+                margin-right: auto;
+                position: absolute;
+                top: 0px;
+                left: 50%;
+                transform: translate(-50%, 0);
+            }
+
+            #controls {
+                display: flex;
+                height: 25px;
+                width: 100%;
+                gap: 5px;
+                justify-content: center;
+                position: absolute;
+                bottom: 10px;
+                left: 50%;
+                transform: translate(-50%, 0);
+            }
+
+            .control {
+                min-width: 25px;
+                min-height: 25px;
+                background: grey;
+                line-height: 28px;
+                font-size: 14px;
+                text-align: center;
+                border-radius: 12px;
+            }
+
+            .control:hover {
+                background: lightgrey;
+            }
+        </style>
     </head>
-    <body style="-webkit-app-region: drag; margin: 0; width: 100vw; height: 100vh;">
-        <div>
-		<canvas id="canvas" width="180" height="180" style="border-radius: 50%; object-fit:cover; width: 180px; height: 180px">
-		</canvas>
+    <body style="margin: 0; width: 100vw; height: 100vh; overflow: hidden;">
+        <canvas id="canvas" width="180" height="180" style="-webkit-app-region: drag; border-radius: 50%; object-fit:cover; width: 180px; height: 180px">
+        </canvas>
+        <div id="controls">
+            <div id="scale" class="control">
+                <i class="fa-solid fa-up-right-and-down-left-from-center"></i>
+            </div>
+            <div id="effect" class="control">
+                <i class="fa-solid fa-bolt-lightning"></i>
+            </div>
         </div>
 	<video autoplay="true" id="videoElement" style="display: none">
 	</video>
