@@ -19,9 +19,11 @@ ipcRenderer.on("device", async (event, id) => {
 });
 
 canvas.addEventListener("dblclick", () => {
+    alert("Got double click event");
     sizeIndex = ((sizeIndex + 1) % sizes.length);
     const size = sizes[sizeIndex];
     window.resizeTo(size, size);
+    alert("Setting size to: " + size);
     canvas.style.width = (size-20)+"px";
     canvas.style.height = (size-20)+"px";
     canvas.width = size;
