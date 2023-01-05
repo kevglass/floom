@@ -3,3 +3,4 @@ node_modules
 elevate.exe
 dist
 dist-x64
+settings.json
