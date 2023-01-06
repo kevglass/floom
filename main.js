@@ -13,6 +13,46 @@ let oldX;
 let oldY;
 let currentDisplay;
 let prefullScreenBounds;
+let recording = false;
+
+
+ipcMain.on("loadSettings", function () {
+	let storage = {};
+	const storageFile = app.getPath('appData') + path.sep + "settings.json";
+	console.log("Loading from: " + storageFile);
+	if (fs.existsSync(storageFile)) {
+		try {
+			storage = JSON.parse(fs.readFileSync(storageFile).toString());
+		} catch (e) {
+			// do nothing, corrupt settings start anyway
+			console.log(e);
+		}
+	}
+	captureWindow.webContents.send("settings", storage);
+});
+
+function saveConfiguration() {
+	const config = {
+		video: videoWindow.getBounds(),
+		capture: captureWindow.getBounds()
+	};
+	const storageFile = app.getPath('appData') + path.sep + "config.json";
+	fs.writeFileSync(storageFile, JSON.stringify(config));
+}
+
+function loadConfiguration() {
+	const storageFile = app.getPath('appData') + path.sep + "config.json";
+	if (fs.existsSync(storageFile)) {
+		try {
+			const config = JSON.parse(fs.readFileSync(storageFile).toString());
+			videoWindow.setBounds(config.video);
+			captureWindow.setBounds(config.capture);
+		} catch (e) {
+			// do nothing, corrupt settings start anyway
+			console.log(e);
+		}
+	}
+}
 
 function createWindow() {
 	videoWindow = new BrowserWindow({
@@ -23,10 +63,10 @@ function createWindow() {
 		transparent: true,
 		frame: false,
 		skipTaskbar: true,
-        webPreferences: {
-            nodeIntegration: true,
-            contextIsolation: false,
-        }
+		webPreferences: {
+			nodeIntegration: true,
+			contextIsolation: false,
+		}
 	});
 	videoWindow.setAlwaysOnTop(true, "pop-up-menu");
 	videoWindow.loadFile("video.html");
@@ -41,10 +81,10 @@ function createWindow() {
 		roundedCorners: false,
 		frame: false,
 		hasShadow: false,
-        webPreferences: {
-            nodeIntegration: true,
-            contextIsolation: false,
-        }
+		webPreferences: {
+			nodeIntegration: true,
+			contextIsolation: false,
+		}
 	});
 	indicatorWindow.setAlwaysOnTop(true, "status");
 	indicatorWindow.loadFile("indicator.html");
@@ -58,28 +98,31 @@ function createWindow() {
 		frame: false,
 		roundedCorners: false,
 		hasShadow: false,
-        webPreferences: {
-            nodeIntegration: true,
-            contextIsolation: false,
-        }
+		webPreferences: {
+			nodeIntegration: true,
+			contextIsolation: false,
+		}
 	});
 
 	captureWindow.setAlwaysOnTop(true, "status");
 	captureWindow.loadFile("capture.html");
+
+	loadConfiguration();
+
 	captureWindow.show();
 
 	videoWindow.setPosition(captureWindow.getPosition()[0] + 20, captureWindow.getPosition()[1] + 400);
 
-	ipcMain.on("fullscreen", function() {
+	ipcMain.on("fullscreen", function () {
 		const bounds = captureWindow.getBounds();
 
 		if ((currentDisplay.bounds.x !== bounds.x || currentDisplay.bounds.y !== bounds.y || currentDisplay.bounds.height !== bounds.height || currentDisplay.bounds.width !== bounds.width)) {
 			prefullScreenBounds = bounds;
 
-			captureWindow.setPosition(currentDisplay.bounds.x,currentDisplay.bounds.y);
+			captureWindow.setPosition(currentDisplay.bounds.x, currentDisplay.bounds.y);
 			captureWindow.setSize(currentDisplay.bounds.width, currentDisplay.bounds.height);
 		} else {
-			captureWindow.setPosition(prefullScreenBounds.x,prefullScreenBounds.y);
+			captureWindow.setPosition(prefullScreenBounds.x, prefullScreenBounds.y);
 			captureWindow.setSize(prefullScreenBounds.width, prefullScreenBounds.height);
 		}
 
@@ -87,11 +130,11 @@ function createWindow() {
 		captureWindow.webContents.send("position", captureWindow.getPosition()[0] - currentDisplay.bounds.x, captureWindow.getPosition()[1] - currentDisplay.bounds.y);
 	});
 
-	ipcMain.on("quit", function() {
+	ipcMain.on("quit", function () {
 		app.exit(0);
 	});
 
-	ipcMain.on("changeVideo", function(event, sourceId) {
+	ipcMain.on("changeVideo", function (event, sourceId) {
 		if (sourceId === "none") {
 			videoWindow.hide();
 		} else {
@@ -100,54 +143,56 @@ function createWindow() {
 		videoWindow.webContents.send("device", sourceId);
 	});
 
-	ipcMain.on("preRecording", function() {
+	ipcMain.on("preRecording", function () {
 		const bounds = captureWindow.getBounds();
 		oldWidth = bounds.width;
 		oldHeight = bounds.height;
 		oldX = bounds.x;
 		oldY = bounds.y;
 
-		indicatorWindow.setSize(oldWidth + 20, oldHeight+20);
+		indicatorWindow.setSize(oldWidth + 20, oldHeight + 20);
 		indicatorWindow.setPosition(oldX - 10, oldY - 10);
 		indicatorWindow.show();
 		setTimeout(() => {
 			indicatorWindow.setAlwaysOnTop(true, "status");
-		}, 100);
+			indicatorWindow.setSize(oldWidth + 20, oldHeight + 20);
+			indicatorWindow.setPosition(oldX - 10, oldY - 10);
+		}, 500);
 	});
 
-	ipcMain.on("startRecording", function() {
+	ipcMain.on("startRecording", function () {
+		recording = true;
+
 		videoWindow.webContents.send("startRecording");
-		
+
 		const bounds = captureWindow.getBounds();
 		oldWidth = bounds.width;
 		oldHeight = bounds.height;
 		oldX = bounds.x;
 		oldY = bounds.y;
-
-		captureWindow.setSize(200,40);
+		captureWindow.setSize(200, 40);
 		captureWindow.setPosition(Math.floor(oldX + ((oldWidth - 200) / 2)), Math.max(-35, Math.floor(oldY - 50)));
-
 
 		setTimeout(() => {
 			captureWindow.setAlwaysOnTop(true, "status");
 		}, 100);
 	});
 
-	ipcMain.on("stopRecording", function() {
+	ipcMain.on("stopRecording", function () {
 		videoWindow.webContents.send("stopRecording");
 
 		indicatorWindow.hide();
-		captureWindow.setSize(oldWidth,oldHeight);
+		captureWindow.setSize(oldWidth, oldHeight);
 		captureWindow.setPosition(oldX, oldY);
 		setTimeout(() => {
 			captureWindow.setAlwaysOnTop(true, "status");
 		}, 1000);
+		recording = false;
 	});
 
-	ipcMain.on("loadSettings", function() {
+	ipcMain.on("loadSettings", function () {
 		let storage = {};
 		const storageFile = app.getPath('appData') + path.sep + "settings.json";
-		console.log("Loading from: " + storageFile);
 		if (fs.existsSync(storageFile)) {
 			try {
 				storage = JSON.parse(fs.readFileSync(storageFile).toString());
@@ -155,15 +200,12 @@ function createWindow() {
 				// do nothing, corrupt settings start anyway
 				console.log(e);
 			}
-		} 
+		}
 		captureWindow.webContents.send("settings", storage);
 	});
 
-	ipcMain.on("saveSettings", function(event, settings) {
-		console.log("Saving");
-
+	ipcMain.on("saveSettings", function (event, settings) {
 		const storageFile = app.getPath('appData') + path.sep + "settings.json";
-		console.log("Saving to: " + storageFile);
 		fs.writeFileSync(storageFile, JSON.stringify(settings));
 	});
 
@@ -172,15 +214,31 @@ function createWindow() {
 		systemPreferences.askForMediaAccess("microphone");
 	}
 
-    captureWindow.on("move", () => {
+	videoWindow.on("resized", () => {
+		saveConfiguration();
+	});
+	videoWindow.on("move", () => {
+		saveConfiguration();
+	});
+
+	captureWindow.on("resized", () => {
+		if (!recording) {
+			saveConfiguration();
+		}
+	});
+	captureWindow.on("move", () => {
 		captureCurrentScreen();
 
 		if (currentDisplay) {
 			captureWindow.webContents.send("position", captureWindow.getPosition()[0] - currentDisplay.bounds.x, captureWindow.getPosition()[1] - currentDisplay.bounds.y);
 		}
-    });
 
-	captureWindow.webContents.on("did-finish-load", function() {
+		if (!recording) {
+			saveConfiguration();
+		}
+	});
+
+	captureWindow.webContents.on("did-finish-load", function () {
 		captureCurrentScreen();
 		captureWindow.webContents.send("position", captureWindow.getPosition()[0], captureWindow.getPosition()[1]);
 	});
@@ -188,7 +246,7 @@ function createWindow() {
 
 function captureCurrentScreen() {
 	const bounds = captureWindow.getBounds();
-	const nowDisplay = screen.getDisplayNearestPoint({x: bounds.x, y: bounds.y});
+	const nowDisplay = screen.getDisplayNearestPoint({ x: bounds.x, y: bounds.y });
 
 	if (nowDisplay.id !== currentDisplay?.id) {
 		currentDisplay = nowDisplay;
@@ -207,43 +265,39 @@ function captureCurrentScreen() {
 }
 
 app.whenReady().then(() => {
-  createWindow()
-  
-  globalShortcut.register('Shift+Escape', () => {
-	captureWindow.webContents.send("doStop");
-  })
-  globalShortcut.register('Shift+Up', () => {
-    videoWindow.setPosition(videoWindow.getPosition()[0], captureWindow.getPosition()[1] + 20)
-  })
-  globalShortcut.register('Shift+Down', () => {
-	  let captureWindowBounds = captureWindow.getBounds()
-	  let captureWindowHeight = captureWindowBounds.height
-	  let captureWindowWidth = captureWindowBounds.width
-	  let videoSize = videoWindow.getSize()
-	videoWindow.setPosition(videoWindow.getPosition()[0], captureWindow.getPosition()[1] + captureWindowHeight - videoSize[1] - 20)
-  })
+	createWindow()
+
+	globalShortcut.register('Shift+Escape', () => {
+		captureWindow.webContents.send("doStop");
+	})
+	globalShortcut.register('Shift+Up', () => {
+		const yp = recording ? oldY : captureWindow.getPosition()[1];
+		videoWindow.setPosition(videoWindow.getPosition()[0], yp + 20)
+	})
+	globalShortcut.register('Shift+Down', () => {
+		const yp = recording ? oldY : captureWindow.getPosition()[1];
+		let captureWindowBounds = captureWindow.getBounds()
+		let captureWindowHeight = recording ? oldHeight : captureWindowBounds.height
+		let videoSize = videoWindow.getSize()
+		videoWindow.setPosition(videoWindow.getPosition()[0], yp + captureWindowHeight - videoSize[1] - 20)
+	})
 	globalShortcut.register('Shift+Right', () => {
-	  let captureWindowBounds = captureWindow.getBounds()
-	  let captureWindowHeight = captureWindowBounds.height
-	  let captureWindowWidth = captureWindowBounds.width
-	  let videoSize = videoWindow.getSize()
-	videoWindow.setPosition(captureWindow.getPosition()[0] + captureWindowWidth - videoSize[0] - 20, videoWindow.getPosition()[1])
-  })
+		const xp = recording ? oldX : captureWindow.getPosition()[0];
+		let captureWindowBounds = captureWindow.getBounds()
+		let captureWindowWidth = recording ? oldWidth : captureWindowBounds.width
+		let videoSize = videoWindow.getSize()
+		videoWindow.setPosition(xp + captureWindowWidth - videoSize[0] - 20, videoWindow.getPosition()[1])
+	})
 	globalShortcut.registerAll(['Shift+Left'], () => {
-	  let captureWindowBounds = captureWindow.getBounds()
-	  let captureWindowHeight = captureWindowBounds.height
-	  let captureWindowWidth = captureWindowBounds.width
-	  let videoSize = videoWindow.getSize()
-	videoWindow.setPosition(captureWindow.getPosition()[0] + 20, videoWindow.getPosition()[1])
-  })
+		const xp = recording ? oldX : captureWindow.getPosition()[0];
+		videoWindow.setPosition(xp + 20, videoWindow.getPosition()[1])
+	})
 
-
-
-  app.on("activate", function () {
-    if (BrowserWindow.getAllWindows().length === 0) createWindow()
-  })
+	app.on("activate", function () {
+		if (BrowserWindow.getAllWindows().length === 0) createWindow()
+	})
 })
 
 app.on("window-all-closed", function () {
-  app.quit()
+	app.quit()
 })
