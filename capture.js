@@ -1,16 +1,8 @@
 const { ipcRenderer } = require('electron');
-const fs = require('fs');
 
 let storage = {};
 
-if (fs.existsSync("settings.json")) {
-    try {
-        storage = JSON.parse(fs.readFileSync("settings.json").toString());
-    } catch (e) {
-        // do nothing, corrupt settings start anyway
-        console.log(e);
-    }
-} 
+ipcRenderer.send("loadSettings");
 
 let screenStream;
 let audioStream;
@@ -62,6 +54,11 @@ document.getElementById("quit").addEventListener("click", () => {
 });
 
 console.log("Register handler for set source");
+
+ipcRenderer.on("settings", async(event, s) => {
+    storage = s;
+    navigator.mediaDevices.enumerateDevices().then(gotDevices).catch(handleEnumError);
+});
 
 ipcRenderer.on("doStop", async (event, x, y) => {
     this.stopRecording();
@@ -261,7 +258,6 @@ function stopRecording() {
 }
 
 function gotDevices(deviceInfos) {
-
     // Handles being called several times to update labels. Preserve values.
     const values = selectors.map(select => select.value);
     selectors.forEach(select => {
@@ -323,7 +319,7 @@ function gotDevices(deviceInfos) {
 function start() {
     storage.audio = audioInputSelect.options[audioInputSelect.selectedIndex].innerHTML;
     storage.video = videoSelect.options[videoSelect.selectedIndex].innerHTML;
-    fs.writeFileSync("settings.json", JSON.stringify(storage));
+    ipcRenderer.send("saveSettings", storage);
 
     const videoSource = videoSelect.value;
     if (videoSource !== videoInUse) {
@@ -358,9 +354,6 @@ function start() {
         }
     }
 }
-
-
-navigator.mediaDevices.enumerateDevices().then(gotDevices).catch(handleEnumError);
 
 audioInputSelect.onchange = start;
 videoSelect.onchange = start;

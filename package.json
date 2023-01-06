@@ -6,7 +6,7 @@
   "scripts": {
     "start": "electron main.js",
     "compile": "electron-builder --dir",
-    "beta": "rm -rf dist; electron-builder -w --x64",
+    "beta": "rm -rf dist; electron-builder -m",
     "dist": "rm -rf dist; rm -rf dist-x64; electron-builder -mwl --x64; mv dist dist-x64; electron-builder -mwl"
   },
   "author": "",

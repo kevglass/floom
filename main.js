@@ -1,6 +1,8 @@
 const { app, BrowserWindow, ipcMain, screen, systemPreferences, globalShortcut } = require("electron")
 const { desktopCapturer } = require("electron")
 const os = require("os");
+const fs = require('fs');
+const path = require('path')
 
 let videoWindow;
 let captureWindow;
@@ -140,6 +142,29 @@ function createWindow() {
 		setTimeout(() => {
 			captureWindow.setAlwaysOnTop(true, "status");
 		}, 1000);
+	});
+
+	ipcMain.on("loadSettings", function() {
+		let storage = {};
+		const storageFile = app.getPath('appData') + path.sep + "settings.json";
+		console.log("Loading from: " + storageFile);
+		if (fs.existsSync(storageFile)) {
+			try {
+				storage = JSON.parse(fs.readFileSync(storageFile).toString());
+			} catch (e) {
+				// do nothing, corrupt settings start anyway
+				console.log(e);
+			}
+		} 
+		captureWindow.webContents.send("settings", storage);
+	});
+
+	ipcMain.on("saveSettings", function(event, settings) {
+		console.log("Saving");
+
+		const storageFile = app.getPath('appData') + path.sep + "settings.json";
+		console.log("Saving to: " + storageFile);
+		fs.writeFileSync(storageFile, JSON.stringify(settings));
 	});
 
 	if (os.platform() === "darwin") {
