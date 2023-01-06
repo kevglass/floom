@@ -212,6 +212,32 @@ app.whenReady().then(() => {
   globalShortcut.register('Shift+Escape', () => {
 	captureWindow.webContents.send("doStop");
   })
+  globalShortcut.register('Shift+Up', () => {
+    videoWindow.setPosition(videoWindow.getPosition()[0], captureWindow.getPosition()[1] + 20)
+  })
+  globalShortcut.register('Shift+Down', () => {
+	  let captureWindowBounds = captureWindow.getBounds()
+	  let captureWindowHeight = captureWindowBounds.height
+	  let captureWindowWidth = captureWindowBounds.width
+	  let videoSize = videoWindow.getSize()
+	videoWindow.setPosition(videoWindow.getPosition()[0], captureWindow.getPosition()[1] + captureWindowHeight - videoSize[1] - 20)
+  })
+	globalShortcut.register('Shift+Right', () => {
+	  let captureWindowBounds = captureWindow.getBounds()
+	  let captureWindowHeight = captureWindowBounds.height
+	  let captureWindowWidth = captureWindowBounds.width
+	  let videoSize = videoWindow.getSize()
+	videoWindow.setPosition(captureWindow.getPosition()[0] + captureWindowWidth - videoSize[0] - 20, videoWindow.getPosition()[1])
+  })
+	globalShortcut.registerAll(['Shift+Left'], () => {
+	  let captureWindowBounds = captureWindow.getBounds()
+	  let captureWindowHeight = captureWindowBounds.height
+	  let captureWindowWidth = captureWindowBounds.width
+	  let videoSize = videoWindow.getSize()
+	videoWindow.setPosition(captureWindow.getPosition()[0] + 20, videoWindow.getPosition()[1])
+  })
+
+
 
   app.on("activate", function () {
     if (BrowserWindow.getAllWindows().length === 0) createWindow()
