@@ -56,7 +56,6 @@ ipcRenderer.on("avatar", async (event, content) => {
 });
 
 ipcRenderer.on("path", async(event, path) => {
-    alert(path);
     appPath = path;
 });
 
