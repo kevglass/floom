@@ -239,7 +239,7 @@ function createWindow() {
 		if (path) {
 			fs.writeFileSync(path+".webm", contents.data);
 			execFile(ffmpeg.path, [
-				'-i', path+'.webm',
+				'-i', path+'.webm', 
 				path
 			], (error, stdout, stderr) => {
 				if (error) {

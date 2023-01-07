@@ -138,14 +138,6 @@ async function save() {
     ipcRenderer.send("saveFile", {
         data: Buffer.from(await blob.arrayBuffer())
     });
-    // const url = URL.createObjectURL(blob);
-    // const a = document.createElement("a");
-    // document.body.appendChild(a);
-    // a.style = "display: none";
-    // a.href = url;
-    // a.download = "recording-" + (Date.now()) + ".webm";
-    // a.click();
-    // window.URL.revokeObjectURL(url);
 }
 
 function copyFrame() {
@@ -187,8 +179,8 @@ function startRecordingStreams() {
     video.play();
 
     canvas = document.createElement("canvas");
-    canvas.width = window.innerWidth;
-    canvas.height = window.innerHeight;
+    canvas.width = Math.floor(window.innerWidth / 2) * 2;
+    canvas.height =  Math.floor(window.innerHeight / 2) * 2;
     ctx = canvas.getContext("2d");
     video.requestVideoFrameCallback(copyFrame);
 
