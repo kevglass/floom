@@ -24,6 +24,14 @@ let rightEyeRange = {
     min: 0.3,
     max: 0.05
 }
+let rightBrowRange = {
+    min: undefined,
+    max: undefined
+}
+let leftBrowRange = {
+    min: undefined,
+    max: undefined
+}
 let mouthBig;
 let teeth;
 let tongue;
@@ -31,6 +39,7 @@ let eyes;
 let leftEye;
 let rightEye;
 let faceMeshReady = false;
+let brows;
 
 ctx.fillStyle = "black";
 ctx.fillRect(0, 0, canvas.width, canvas.height);
@@ -96,8 +105,6 @@ function processAvatar() {
     rightEye = eyes.getElementsByTagName("circle").item(1);
 
     brows = document.getElementById("I-Browse");
-    leftBrow = eyes.getElementsByTagName("path").item(0);
-    rightBrow = eyes.getElementsByTagName("path").item(1);
 }
 
 function changeAvatar() {
@@ -183,28 +190,30 @@ function findMinMaxAverage(landmarks, indicies) {
     };
     for (const ptIndex of indicies) {
         const pt = landmarks[ptIndex[0]];
-        const x = pt.x;
-        const y = pt.y;
-        result.x += pt.x;
-        result.y += pt.y;
-        if ((result.minY === undefined) || (result.minY > y)) {
-            result.minY = y;
+        result.averageX += pt.x;
+        result.averageY += pt.y;
+        if ((result.minY === undefined) || (result.minY > pt.y)) {
+            result.minY = pt.y;
         }
-        if ((result.maxY === undefined) || (result.maxY < y)) {
-            result.maxY = y;
+        if ((result.maxY === undefined) || (result.maxY < pt.y)) {
+            result.maxY = pt.y;
         }
     }
-    result.x /= indicies.length;
-    result.y /= indicies.length;
+    result.averageX /= indicies.length;
+    result.averageY /= indicies.length;
 
     return result;
 }
+
+let done = false;
 
 function onResults(results) {
     let leftEyeStats;
     let rightEyeStats;
     let faceStats;
     let mouthStats;
+    let leftBrowStats;
+    let rightBrowStats;
 
     if (results.multiFaceLandmarks) {
         for (const landmarks of results.multiFaceLandmarks) {
@@ -212,6 +221,8 @@ function onResults(results) {
             rightEyeStats = findMinMaxAverage(landmarks, FACEMESH_RIGHT_EYE);
             faceStats = findMinMaxAverage(landmarks, FACEMESH_FACE_OVAL);
             mouthStats = findMinMaxAverage(landmarks, FACEMESH_LIPS);
+            rightBrowStats = findMinMaxAverage(landmarks, FACEMESH_RIGHT_EYEBROW);
+            leftBrowStats = findMinMaxAverage(landmarks, FACEMESH_LEFT_EYEBROW);
 
             const faceHeight = faceStats.maxY - faceStats.minY;
             const mouthHeight = (mouthStats.maxY - mouthStats.minY) / faceHeight;
@@ -224,6 +235,7 @@ function onResults(results) {
             if ((mouthRange.max === undefined) || (mouthRange.max < mouthHeight)) {
                 mouthRange.max = mouthHeight;
             }
+
             if ((leftEyeRange.min === undefined) || (leftEyeRange.min > leftEyeHeight)) {
                 leftEyeRange.min = leftEyeHeight;
             }
@@ -237,28 +249,52 @@ function onResults(results) {
                 rightEyeRange.max = rightEyeHeight;
             }
 
+            if ((leftBrowRange.min === undefined) || (leftBrowRange.min > leftBrowStats.averageY)) {
+                leftBrowRange.min = leftBrowStats.averageY;
+            }
+            if ((leftBrowRange.max === undefined) || (leftBrowRange.max < leftBrowStats.averageY)) {
+                leftBrowRange.max = leftBrowStats.averageY;
+            }
+            if ((rightBrowRange.min === undefined) || (rightBrowRange.min > rightBrowStats.averageY)) {
+                rightBrowRange.min =  rightBrowStats.averageY;
+            }
+            if ((rightBrowRange.max === undefined) || (rightBrowRange.max < rightBrowStats.averageY)) {
+                rightBrowRange.max = rightBrowStats.averageY;
+            }
+
             let mouthOpenPer = (mouthHeight - mouthRange.min) / (mouthRange.max - mouthRange.min);
-            if (mouthOpenPer < 0.1) {
-                mouthOpenPer = 0.1;
+            if (mouthOpenPer < 0.15) {
+                mouthOpenPer = 0.15;
             }
             let leftEyePer = (leftEyeHeight - leftEyeRange.min) / (leftEyeRange.max - leftEyeRange.min);
-            if (leftEyePer < 0.2) {
-                leftEyePer = 0.2;
+            if (leftEyePer < 0.1) {
+                leftEyePer = 0.1;
             }
-            if (leftEyePer > 0.2) {
+            if (leftEyePer > 0.15) {
                 leftEyePer = 1;
             }
             let rightEyePer = (rightEyeHeight - rightEyeRange.min) / (rightEyeRange.max - rightEyeRange.min);
-            if (rightEyePer < 0.2) {
-                rightEyePer = 0.2;
+            if (rightEyePer < 0.15) {
+                rightEyePer = 0.15;
             }
-            if (rightEyePer > 0.2) {
+            if (rightEyePer > 0.15) {
                 rightEyePer = 1;
             }
-
+            let leftBrowPosition = ((leftBrowStats.averageY - leftBrowRange.min) / (leftBrowRange.max - leftBrowRange.min));
+            let rightBrowPosition = ((rightBrowStats.averageY - rightBrowRange.min) / (rightBrowRange.max - rightBrowRange.min));
+            
+            let browPosition = rightBrowPosition;
+            if (Math.abs(leftBrowPosition) < Math.abs(rightBrowPosition)) {
+                browPosition = leftBrowPosition;
+            }
+            
+            const eyeScale = Math.max(0.3, Math.max(rightEyePer, leftEyePer));
             TweenMax.to(mouthBig, 0.05, { scaleY: Math.min(1.5, 0.2 + (mouthOpenPer * 2)) });
-            TweenMax.to(leftEye, 0.05, { scaleY: leftEyePer });
-            TweenMax.to(rightEye, 0.05, { scaleY: rightEyePer });
+            TweenMax.to(leftEye, 0.05, { scaleY: eyeScale });
+            TweenMax.to(rightEye, 0.05, { scaleY: eyeScale });
+            if (!Number.isNaN(browPosition)) {
+                TweenMax.to(brows, 0.05, { y: (browPosition * 10)  });
+            }
 
             // only process first face
             break;

@@ -240,11 +240,6 @@ function createWindow() {
 			fs.writeFileSync(path+".webm", contents.data);
 			execFile(ffmpeg.path, [
 				'-i', path+'.webm',
-				// '-c:v', 'mpeg4',
-				// '-c:a', 'aac', // or vorbis
-				// '-b:v', '6400k',  // video bitrate
-				// '-b:a', '4800k',  // audio bitrate
-				// '-strict', 'experimental', 
 				path
 			], (error, stdout, stderr) => {
 				if (error) {
@@ -291,7 +286,6 @@ function createWindow() {
 }
 
 function captureCurrentScreen() {
-	captureWindow.openDevTools();
 	const bounds = captureWindow.getBounds();
 	const nowDisplay = screen.getDisplayNearestPoint({ x: bounds.x, y: bounds.y });
 
