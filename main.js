@@ -31,6 +31,11 @@ ipcMain.on("loadSettings", function () {
 	captureWindow.webContents.send("settings", storage);
 });
 
+ipcMain.on("saveAvatar", function(event, content) {
+	const storageFile = app.getPath('appData') + path.sep + "avatar.svg";
+	fs.writeFileSync(storageFile, content);
+});
+
 function saveConfiguration() {
 	const config = {
 		video: videoWindow.getBounds(),
@@ -81,9 +86,9 @@ function createWindow() {
 		roundedCorners: false,
 		frame: false,
 		hasShadow: false,
-		webPreferences: {
+		webPreferences: { 
 			nodeIntegration: true,
-			contextIsolation: false,
+			contextIsolation: true,
 		}
 	});
 	indicatorWindow.setAlwaysOnTop(true, "status");
@@ -107,11 +112,11 @@ function createWindow() {
 	captureWindow.setAlwaysOnTop(true, "status");
 	captureWindow.loadFile("capture.html");
 
-	loadConfiguration();
+	videoWindow.setPosition(captureWindow.getPosition()[0] + 20, captureWindow.getPosition()[1] + 400);
 
 	captureWindow.show();
+	loadConfiguration();
 
-	videoWindow.setPosition(captureWindow.getPosition()[0] + 20, captureWindow.getPosition()[1] + 400);
 
 	ipcMain.on("fullscreen", function () {
 		const bounds = captureWindow.getBounds();
@@ -140,6 +145,7 @@ function createWindow() {
 		} else {
 			videoWindow.show();
 		}
+		videoWindow.webContents.openDevTools();
 		videoWindow.webContents.send("device", sourceId);
 	});
 
@@ -241,6 +247,14 @@ function createWindow() {
 	captureWindow.webContents.on("did-finish-load", function () {
 		captureCurrentScreen();
 		captureWindow.webContents.send("position", captureWindow.getPosition()[0], captureWindow.getPosition()[1]);
+	});
+
+	videoWindow.webContents.on("did-finish-load", function() {
+		const storageFile = app.getPath('appData') + path.sep + "avatar.svg";
+		if (fs.existsSync(storageFile)) {
+			const content = fs.readFileSync(storageFile).toString();
+			videoWindow.webContents.send("avatar", content);
+		};
 	});
 }
 

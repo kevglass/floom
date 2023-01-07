@@ -24,7 +24,8 @@
       "capture.js",
       "video.html",
       "capture.html",
-      "indicator.html"
+      "indicator.html",
+      "facemesh/*"
     ],
     "mac": {
       "hardenedRuntime": false,
