@@ -160,6 +160,13 @@ function createWindow() {
 		indicatorWindow.setSize(oldWidth + 20, oldHeight + 20);
 		indicatorWindow.setPosition(oldX - 10, oldY - 10);
 		indicatorWindow.show();
+		indicatorWindow.setSize(oldWidth + 20, oldHeight + 20);
+		indicatorWindow.setPosition(oldX - 10, oldY - 10);
+		setTimeout(() => {
+			indicatorWindow.setAlwaysOnTop(true, "status");
+			indicatorWindow.setSize(oldWidth + 20, oldHeight + 20);
+			indicatorWindow.setPosition(oldX - 10, oldY - 10);
+		}, 10);
 		setTimeout(() => {
 			indicatorWindow.setAlwaysOnTop(true, "status");
 			indicatorWindow.setSize(oldWidth + 20, oldHeight + 20);
