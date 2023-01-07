@@ -1,5 +1,5 @@
 const { ipcRenderer } = require('electron');
-
+const Buffer = require('buffer').Buffer;
 let storage = {};
 
 ipcRenderer.send("loadSettings");
@@ -55,7 +55,7 @@ document.getElementById("quit").addEventListener("click", () => {
 
 console.log("Register handler for set source");
 
-ipcRenderer.on("settings", async(event, s) => {
+ipcRenderer.on("settings", async (event, s) => {
     storage = s;
     navigator.mediaDevices.enumerateDevices().then(gotDevices).catch(handleEnumError);
 });
@@ -135,14 +135,17 @@ async function save() {
     const blob = new Blob(recordedChunks, {
         type: "video/webm"
     });
-    const url = URL.createObjectURL(blob);
-    const a = document.createElement("a");
-    document.body.appendChild(a);
-    a.style = "display: none";
-    a.href = url;
-    a.download = "recording-" + (Date.now()) + ".webm";
-    a.click();
-    window.URL.revokeObjectURL(url);
+    ipcRenderer.send("saveFile", {
+        data: Buffer.from(await blob.arrayBuffer())
+    });
+    // const url = URL.createObjectURL(blob);
+    // const a = document.createElement("a");
+    // document.body.appendChild(a);
+    // a.style = "display: none";
+    // a.href = url;
+    // a.download = "recording-" + (Date.now()) + ".webm";
+    // a.click();
+    // window.URL.revokeObjectURL(url);
 }
 
 function copyFrame() {
@@ -197,7 +200,6 @@ function startRecordingStreams() {
 
     setTimeout(() => {
         recordedChunks = [];
-        const options = { mimeType: "video/webm; codecs=vp9" };
         const tracks = [];
 
         tracks.push(cutStream.getVideoTracks()[0]);
@@ -207,18 +209,18 @@ function startRecordingStreams() {
 
         if (audioStream) {
             audioContext.createMediaStreamSource(new MediaStream(audioStream.getAudioTracks())).connect(audioStreamDestination);
-            //tracks.push(audioStream.getAudioTracks()[0]);
         }
         if (systemAudioStream) {
             audioContext.createMediaStreamSource(new MediaStream(systemAudioStream.getAudioTracks())).connect(audioStreamDestination);
-            //tracks.push(systemAudioStream.getAudioTracks()[0]);
         }
 
         if (audioStreamDestination.stream.getAudioTracks().length > 0) {
             tracks.push(audioStreamDestination.stream.getAudioTracks()[0]);
         }
-        
+
         const combinedStream = new MediaStream(tracks);
+
+        const options = { mimeType: "video/webm; codecs=vp9" };
         mediaRecorder = new MediaRecorder(combinedStream, options);
 
         mediaRecorder.ondataavailable = handleDataAvailable;
@@ -338,7 +340,7 @@ function start() {
             audioStream = undefined;
         } else {
             if (navigator.mediaDevices.getUserMedia) {
-                navigator.mediaDevices.getUserMedia({ 
+                navigator.mediaDevices.getUserMedia({
                     audio: { deviceId: audioSource ? { exact: audioSource } : undefined },
                 })
                     .then(function (stream) {

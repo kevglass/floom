@@ -3,6 +3,10 @@ const { desktopCapturer } = require("electron")
 const os = require("os");
 const fs = require('fs');
 const path = require('path')
+var ffmpeg = require('ffmpeg-static-electron');
+const { execFile } = require("child_process");
+const { dialog } = require('electron')
+
 
 let videoWindow;
 let captureWindow;
@@ -145,7 +149,6 @@ function createWindow() {
 		} else {
 			videoWindow.show();
 		}
-		videoWindow.webContents.openDevTools();
 		videoWindow.webContents.send("device", sourceId);
 	});
 
@@ -227,6 +230,35 @@ function createWindow() {
 		saveConfiguration();
 	});
 
+	ipcMain.on("saveFile", (event, contents) => {
+		const defaultPath = "recording-" + (Date.now()) + ".mp4";
+		const path = dialog.showSaveDialogSync(captureWindow, {
+			defaultPath: defaultPath
+		});
+
+		if (path) {
+			fs.writeFileSync(path+".webm", contents.data);
+			execFile(ffmpeg.path, [
+				'-i', path+'.webm',
+				// '-c:v', 'mpeg4',
+				// '-c:a', 'aac', // or vorbis
+				// '-b:v', '6400k',  // video bitrate
+				// '-b:a', '4800k',  // audio bitrate
+				// '-strict', 'experimental', 
+				path
+			], (error, stdout, stderr) => {
+				if (error) {
+					console.error(`exec error: ${error}`);
+					return;
+				}
+				console.log(`stdout: ${stdout}`);
+				console.error(`stderr: ${stderr}`);
+
+				fs.unlinkSync(path+".webm");
+			});
+		}
+	});
+
 	captureWindow.on("resized", () => {
 		if (!recording) {
 			saveConfiguration();
@@ -259,6 +291,7 @@ function createWindow() {
 }
 
 function captureCurrentScreen() {
+	captureWindow.openDevTools();
 	const bounds = captureWindow.getBounds();
 	const nowDisplay = screen.getDisplayNearestPoint({ x: bounds.x, y: bounds.y });
 

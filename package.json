@@ -11,7 +11,6 @@
   },
   "author": "",
   "license": "MIT",
-  "dependencies": {},
   "devDependencies": {
     "electron": "^22.0.0",
     "electron-builder": "^23.6.0"
@@ -36,5 +35,8 @@
         "com.apple.security.device.camera": true
       }
     }
+  },
+  "dependencies": {
+    "ffmpeg-static-electron": "^2.0.3"
   }
 }
