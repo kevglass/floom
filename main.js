@@ -7,7 +7,6 @@ var ffmpeg = require('ffmpeg-static-electron');
 const { execFile } = require("child_process");
 const { dialog } = require('electron')
 
-
 let videoWindow;
 let captureWindow;
 let indicatorWindow;
@@ -18,7 +17,6 @@ let oldY;
 let currentDisplay;
 let prefullScreenBounds;
 let recording = false;
-
 
 ipcMain.on("loadSettings", function () {
 	let storage = {};
@@ -277,6 +275,8 @@ function createWindow() {
 	});
 
 	videoWindow.webContents.on("did-finish-load", function() {
+		videoWindow.webContents.send("path", app.getAppPath());
+		
 		const storageFile = app.getPath('appData') + path.sep + "avatar.svg";
 		if (fs.existsSync(storageFile)) {
 			const content = fs.readFileSync(storageFile).toString();

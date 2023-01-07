@@ -1,4 +1,5 @@
 const { ipcRenderer } = require('electron');
+const path = require('path');
 
 const canvas = document.getElementById("canvas");
 const avatar = document.getElementById("avatar");
@@ -40,6 +41,7 @@ let leftEye;
 let rightEye;
 let faceMeshReady = false;
 let brows;
+let appPath;
 
 ctx.fillStyle = "black";
 ctx.fillRect(0, 0, canvas.width, canvas.height);
@@ -51,6 +53,11 @@ video.requestVideoFrameCallback(drawFrame);
 ipcRenderer.on("avatar", async (event, content) => {
     document.getElementById("svg").innerHTML = content;
     processAvatar();
+});
+
+ipcRenderer.on("path", async(event, path) => {
+    alert(path);
+    appPath = path;
 });
 
 ipcRenderer.on("device", async (event, id) => {
@@ -136,9 +143,11 @@ function changeAvatar() {
 function createFaceMesh() {
     faceMesh = new FaceMesh({
         locateFile: (file) => {
-            console.log(`https://cdn.jsdelivr.net/npm/@mediapipe/face_mesh/${file}`);
-
-            return `facemesh/${file}`;
+            if (file === "face_mesh_solution_packed_assets.data") {
+                return `${appPath}${path.sep}facemesh${path.sep}${file}`;
+            } else {
+                return `https://cdn.jsdelivr.net/npm/@mediapipe/face_mesh/${file}`;
+            }
         }
     });
     faceMesh.setOptions({
@@ -287,7 +296,7 @@ function onResults(results) {
             if (Math.abs(leftBrowPosition) < Math.abs(rightBrowPosition)) {
                 browPosition = leftBrowPosition;
             }
-            
+
             const eyeScale = Math.max(0.3, Math.max(rightEyePer, leftEyePer));
             TweenMax.to(mouthBig, 0.05, { scaleY: Math.min(1.5, 0.2 + (mouthOpenPer * 2)) });
             TweenMax.to(leftEye, 0.05, { scaleY: eyeScale });
