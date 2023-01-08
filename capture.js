@@ -198,23 +198,29 @@ function startRecordingStreams() {
 
         const audioContext = new AudioContext();
         const audioStreamDestination = audioContext.createMediaStreamDestination();
+        let hasAudio = false;
 
         if (audioStream) {
+            hasAudio = true;
             audioContext.createMediaStreamSource(new MediaStream(audioStream.getAudioTracks())).connect(audioStreamDestination);
         }
         if (systemAudioStream) {
+            hasAudio = true;
             audioContext.createMediaStreamSource(new MediaStream(systemAudioStream.getAudioTracks())).connect(audioStreamDestination);
         }
 
-        if (audioStreamDestination.stream.getAudioTracks().length > 0) {
+        if (hasAudio) {
             tracks.push(audioStreamDestination.stream.getAudioTracks()[0]);
         }
 
-        const combinedStream = new MediaStream(tracks);
-
         const options = { mimeType: "video/webm; codecs=vp9" };
-        mediaRecorder = new MediaRecorder(combinedStream, options);
 
+        if (hasAudio) {
+            const combinedStream = new MediaStream(tracks);
+            mediaRecorder = new MediaRecorder(combinedStream, options);
+        } else {
+            mediaRecorder = new MediaRecorder(cutStream, options);
+        }
         mediaRecorder.ondataavailable = handleDataAvailable;
         mediaRecorder.start();
     }, 250);
