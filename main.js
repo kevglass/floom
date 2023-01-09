@@ -70,6 +70,7 @@ function createWindow() {
 		transparent: true,
 		frame: false,
 		skipTaskbar: true,
+		hasShadow: false,
 		webPreferences: {
 			nodeIntegration: true,
 			contextIsolation: false,
@@ -178,7 +179,7 @@ function createWindow() {
 		recording = true;
 
 		videoWindow.webContents.send("startRecording");
-
+		
 		const bounds = captureWindow.getBounds();
 		oldWidth = bounds.width;
 		oldHeight = bounds.height;

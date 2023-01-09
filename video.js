@@ -42,6 +42,7 @@ let rightEye;
 let faceMeshReady = false;
 let brows;
 let appPath;
+let eyeBrowMove;
 
 ctx.fillStyle = "black";
 ctx.fillRect(0, 0, canvas.width, canvas.height);
@@ -100,17 +101,30 @@ document.getElementById("loadAvatar").addEventListener("click", () => {
 });
 
 function processAvatar() {
+    eyeBrowMove = 10;
     mouthBig = document.getElementById('Mouth/Smile');
+    if (!mouthBig) {
+        eyeBrowMove = 30;
+        mouthBig = document.getElementById('notion-avatar-mouth');
+    }
+
     teeth = document.getElementById('Teeth');
     tongue = document.getElementById('Tongue');
-    teeth.parentElement.removeChild(teeth);
-    tongue.parentElement.removeChild(tongue);
+    if (teeth) {
+        teeth.parentElement.removeChild(teeth);
+    }
+    if (tongue) {
+        tongue.parentElement.removeChild(tongue);
+    }
 
     eyes = document.getElementById("Eyes/Default-😀");
-    leftEye = eyes.getElementsByTagName("circle").item(0);
-    rightEye = eyes.getElementsByTagName("circle").item(1);
-
+    if (!eyes) {
+        eyes = document.getElementById("notion-avatar-eyes");
+    }
     brows = document.getElementById("I-Browse");
+    if (!brows) {
+        brows = document.getElementById("notion-avatar-eyebrows");
+    }
 }
 
 function changeAvatar() {
@@ -298,10 +312,10 @@ function onResults(results) {
 
             const eyeScale = Math.max(0.3, Math.max(rightEyePer, leftEyePer));
             TweenMax.to(mouthBig, 0.05, { scaleY: Math.min(1.5, 0.2 + (mouthOpenPer * 2)) });
-            TweenMax.to(leftEye, 0.05, { scaleY: eyeScale });
-            TweenMax.to(rightEye, 0.05, { scaleY: eyeScale });
+            TweenMax.to(eyes, 0.05, { scaleY: eyeScale });
             if (!Number.isNaN(browPosition)) {
-                TweenMax.to(brows, 0.05, { y: (browPosition * 10)  });
+                console.log(browPosition);
+                TweenMax.to(brows, 0.05, { y: ((browPosition - 0.5) * eyeBrowMove)  });
             }
 
             // only process first face
