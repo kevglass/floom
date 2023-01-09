@@ -106,6 +106,7 @@ function processAvatar() {
     if (!mouthBig) {
         eyeBrowMove = 30;
         mouthBig = document.getElementById('notion-avatar-mouth');
+        mouthBig.getElementsByTagName("g").item(0).getElementsByTagName("path").item(0).style.fill = "black";
     }
 
     teeth = document.getElementById('Teeth');
@@ -314,7 +315,6 @@ function onResults(results) {
             TweenMax.to(mouthBig, 0.05, { scaleY: Math.min(1.5, 0.2 + (mouthOpenPer * 2)) });
             TweenMax.to(eyes, 0.05, { scaleY: eyeScale });
             if (!Number.isNaN(browPosition)) {
-                console.log(browPosition);
                 TweenMax.to(brows, 0.05, { y: ((browPosition - 0.5) * eyeBrowMove)  });
             }
 
