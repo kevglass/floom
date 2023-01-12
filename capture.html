@@ -64,6 +64,30 @@
 			appearance: none;
 		}
 
+		#back {
+			color: grey;
+			background: white;
+			border: grey 2px solid;
+		}
+
+		#back:hover {
+			background: grey;
+			color: white;
+			border: grey 2px solid;
+		}
+
+		#settingsButton {
+			color: grey;
+			background: white;
+			border: grey 2px solid;
+		}
+
+		#settingsButton:hover {
+			background: grey;
+			color: white;
+			border: grey 2px solid;
+		}
+
 		.deviceButton:focus {
 			outline: none;
 		}
@@ -163,6 +187,17 @@
 			height: 200px;
 		}
 
+		#settings {
+			position: absolute;
+			left: 50%;
+			top: 50%;
+			transform: translate(-50%, -50%);
+			display: flex;
+			flex-direction: column;
+			height: 200px;
+			display: none;
+		}
+
 		#counter {
 			font-size: 60px;
 			font-weight: bold;
@@ -194,15 +229,37 @@
 			<div id="record" class="optionButton">
 				Start Recording
 			</div>
-			<select id="microphone" class="optionButton deviceButton">
-			</select>
-			<select id="camera" class="optionButton deviceButton">
-			</select>
+			<div id="settingsButton" class="optionButton">
+				Settings
+			</div>
 			<div id="quit" class="optionButton">
 				Exit
 			</div>
 			<div id="info" class="outline">
 				Press Shift+Escape to stop recording
+			</div>
+		</div>
+		<div id="settings">
+			<select id="microphone" class="optionButton deviceButton">
+			</select>
+			<select id="camera" class="optionButton deviceButton">
+			</select>
+			<select id="camera2" class="optionButton deviceButton">
+			</select>
+			<select id="camera3" class="optionButton deviceButton">
+			</select>
+			<select id="systemAudio" class="optionButton deviceButton">
+				<option value="yes" selected="true">Record System Audio</option>
+				<option value="no">No System Audio</option>
+			</select>
+			<select id="countdown" class="optionButton deviceButton">
+				<option value="0">No countdown</option>
+				<option value="3">3 seconds</option>
+				<option value="5" selected="true">5 seconds</option>
+				<option value="10">10 seconds</option>
+			</select>
+			<div id="back" class="optionButton">
+				Back
 			</div>
 		</div>
 		<div id="starting">

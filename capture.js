@@ -16,6 +16,8 @@ let video;
 let offsetX;
 let offsetY;
 let videoInUse;
+let videoInUse2;
+let videoInUse3;
 let audioInUse;
 let timeout;
 
@@ -26,7 +28,11 @@ const counter = document.getElementById("counter");
 const controls = document.getElementById("controls");
 const audioInputSelect = document.getElementById("microphone");
 const videoSelect = document.getElementById("camera");
-const selectors = [audioInputSelect, videoSelect];
+const videoSelect2 = document.getElementById("camera2");
+const videoSelect3 = document.getElementById("camera3");
+const countdownSelect = document.getElementById("countdown");
+const systemSelect = document.getElementById("systemAudio");
+const selectors = [audioInputSelect, videoSelect, videoSelect2, videoSelect3];
 
 let countdown = 0;
 
@@ -35,6 +41,16 @@ startingControls.style.display = "none";
 
 document.getElementById("drag").addEventListener("dblclick", () => {
     ipcRenderer.send("fullscreen");
+});
+
+document.getElementById("settingsButton").addEventListener("click", () => {
+    document.getElementById("controls").style.display = "none";
+    document.getElementById("settings").style.display = "flex";
+});
+
+document.getElementById("back").addEventListener("click", () => {
+    document.getElementById("controls").style.display = "flex";
+    document.getElementById("settings").style.display = "none";
 });
 
 document.getElementById("cancel").addEventListener("click", () => {
@@ -57,6 +73,12 @@ console.log("Register handler for set source");
 
 ipcRenderer.on("settings", async (event, s) => {
     storage = s;
+    if (s.recordSystemAudio) {
+        systemSelect.value = s.recordSystemAudio;
+    }
+    if (s.countdown) {
+        systemSelect.value = "" + s.countdown;
+    }
     navigator.mediaDevices.enumerateDevices().then(gotDevices).catch(handleEnumError);
 });
 
@@ -154,7 +176,7 @@ function startRecording() {
     if (countdown === 0) {
         ipcRenderer.send("preRecording");
 
-        countdown = 5;
+        countdown = storage.countdown ? storage.countdown : 5;
         showCountdownOrStart();
     }
 }
@@ -204,7 +226,7 @@ function startRecordingStreams() {
             hasAudio = true;
             audioContext.createMediaStreamSource(new MediaStream(audioStream.getAudioTracks())).connect(audioStreamDestination);
         }
-        if (systemAudioStream) {
+        if (systemAudioStream && (storage.recordSystemAudio !== "no")) {
             hasAudio = true;
             audioContext.createMediaStreamSource(new MediaStream(systemAudioStream.getAudioTracks())).connect(audioStreamDestination);
         }
@@ -286,6 +308,16 @@ function gotDevices(deviceInfos) {
             if (option.text === storage.video) {
                 option.selected = true;
             }
+
+            option = document.createElement('option');
+            option.value = deviceInfo.deviceId;
+            option.text = deviceInfo.label || `camera ${videoSelect.length + 1}`;
+            videoSelect2.appendChild(option);
+
+            option = document.createElement('option');
+            option.value = deviceInfo.deviceId;
+            option.text = deviceInfo.label || `camera ${videoSelect.length + 1}`;
+            videoSelect3.appendChild(option);
         } else {
             console.log('Some other kind of source/device: ', deviceInfo);
         }
@@ -305,6 +337,23 @@ function gotDevices(deviceInfos) {
     }
     videoSelect.appendChild(option);
     option = document.createElement('option');
+    option.label = "No Camera";
+    option.value = "none";
+    option.innerHTML = "No Camera";
+    if (option.text === storage.video2 || !storage.video2) {
+        option.selected = true;
+    }
+    videoSelect2.appendChild(option);
+    option = document.createElement('option');
+    option.label = "No Camera";
+    option.value = "none";
+    option.innerHTML = "No Camera";
+    if (option.text === storage.video3 || !storage.video3) {
+        option.selected = true;
+    }
+    videoSelect3.appendChild(option);
+
+    option = document.createElement('option');
     option.label = "No Microphone";
     option.value = "none";
     option.innerHTML = "No Microphone";
@@ -319,18 +368,28 @@ function gotDevices(deviceInfos) {
 function start() {
     storage.audio = audioInputSelect.options[audioInputSelect.selectedIndex].innerHTML;
     storage.video = videoSelect.options[videoSelect.selectedIndex].innerHTML;
+    storage.video2 = videoSelect2.options[videoSelect2.selectedIndex].innerHTML;
+    storage.video3 = videoSelect3.options[videoSelect3.selectedIndex].innerHTML;
+    storage.countdown = Number.parseInt(countdownSelect.value);
+    storage.recordSystemAudio = systemSelect.value;
     ipcRenderer.send("saveSettings", storage);
 
     const videoSource = videoSelect.value;
     if (videoSource !== videoInUse) {
         videoInUse = videoSource;
-        ipcRenderer.send("changeVideo", videoSource);
-        if (audioStream) {
-            audioStream.getTracks().forEach(track => {
-                track.stop();
-            });
-        }
+        ipcRenderer.send("changeVideo", videoSource, 1);
     }
+    const videoSource2 = videoSelect2.value;
+    if (videoSource2 !== videoInUse2) {
+        videoInUse2 = videoSource2;
+        ipcRenderer.send("changeVideo", videoSource2, 2);
+    }
+    const videoSource3 = videoSelect3.value;
+    if (videoSource3 !== videoInUse3) {
+        videoInUse3 = videoSource3;
+        ipcRenderer.send("changeVideo", videoSource3, 3);
+    }
+
     const audioSource = audioInputSelect.value;
     if (audioSource !== audioInUse) {
         audioInUse = audioSource;
@@ -357,3 +416,7 @@ function start() {
 
 audioInputSelect.onchange = start;
 videoSelect.onchange = start;
+videoSelect2.onchange = start;
+videoSelect3.onchange = start;
+countdownSelect.onchange = start;
+systemSelect.onchange = start;

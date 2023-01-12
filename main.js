@@ -8,6 +8,8 @@ const { execFile } = require("child_process");
 const { dialog } = require('electron')
 
 let videoWindow;
+let videoWindow2;
+let videoWindow3;
 let captureWindow;
 let indicatorWindow;
 let oldWidth;
@@ -41,6 +43,8 @@ ipcMain.on("saveAvatar", function(event, content) {
 function saveConfiguration() {
 	const config = {
 		video: videoWindow.getBounds(),
+		video2: videoWindow2.getBounds(),
+		video3: videoWindow3.getBounds(),
 		capture: captureWindow.getBounds()
 	};
 	const storageFile = app.getPath('appData') + path.sep + "config.json";
@@ -53,6 +57,8 @@ function loadConfiguration() {
 		try {
 			const config = JSON.parse(fs.readFileSync(storageFile).toString());
 			videoWindow.setBounds(config.video);
+			videoWindow2.setBounds(config.video2);
+			videoWindow3.setBounds(config.video3);
 			captureWindow.setBounds(config.capture);
 		} catch (e) {
 			// do nothing, corrupt settings start anyway
@@ -78,6 +84,40 @@ function createWindow() {
 	});
 	videoWindow.setAlwaysOnTop(true, "pop-up-menu");
 	videoWindow.loadFile("video.html");
+
+	videoWindow2 = new BrowserWindow({
+		title: "Floom Video",
+		width: 200,
+		height: 200,
+		show: false,
+		transparent: true,
+		frame: false,
+		skipTaskbar: true,
+		hasShadow: false,
+		webPreferences: {
+			nodeIntegration: true,
+			contextIsolation: false,
+		}
+	});
+	videoWindow2.setAlwaysOnTop(true, "pop-up-menu");
+	videoWindow2.loadFile("video.html");
+
+	videoWindow3 = new BrowserWindow({
+		title: "Floom Video",
+		width: 200,
+		height: 200,
+		show: false,
+		transparent: true,
+		frame: false,
+		skipTaskbar: true,
+		hasShadow: false,
+		webPreferences: {
+			nodeIntegration: true,
+			contextIsolation: false,
+		}
+	});
+	videoWindow3.setAlwaysOnTop(true, "pop-up-menu");
+	videoWindow3.loadFile("video.html");
 
 	indicatorWindow = new BrowserWindow({
 		title: "",
@@ -116,6 +156,8 @@ function createWindow() {
 	captureWindow.loadFile("capture.html");
 
 	videoWindow.setPosition(captureWindow.getPosition()[0] + 20, captureWindow.getPosition()[1] + 400);
+	videoWindow2.setPosition(captureWindow.getPosition()[0] + 20, captureWindow.getPosition()[1] + 300);
+	videoWindow3.setPosition(captureWindow.getPosition()[0] + 20, captureWindow.getPosition()[1] + 200);
 
 	captureWindow.show();
 	loadConfiguration();
@@ -142,13 +184,15 @@ function createWindow() {
 		app.exit(0);
 	});
 
-	ipcMain.on("changeVideo", function (event, sourceId) {
+	ipcMain.on("changeVideo", function (event, sourceId, index) {
+		const targetWindow = index === 1 ? videoWindow : index === 2 ? videoWindow2 : videoWindow3;
+
 		if (sourceId === "none") {
-			videoWindow.hide();
+			targetWindow.hide();
 		} else {
-			videoWindow.show();
+			targetWindow.show();
 		}
-		videoWindow.webContents.send("device", sourceId);
+		targetWindow.webContents.send("device", sourceId);
 	});
 
 	ipcMain.on("preRecording", function () {
@@ -179,6 +223,8 @@ function createWindow() {
 		recording = true;
 
 		videoWindow.webContents.send("startRecording");
+		videoWindow2.webContents.send("startRecording");
+		videoWindow3.webContents.send("startRecording");
 		
 		const bounds = captureWindow.getBounds();
 		oldWidth = bounds.width;
@@ -195,6 +241,8 @@ function createWindow() {
 
 	ipcMain.on("stopRecording", function () {
 		videoWindow.webContents.send("stopRecording");
+		videoWindow2.webContents.send("stopRecording");
+		videoWindow3.webContents.send("stopRecording");
 
 		indicatorWindow.hide();
 		captureWindow.setSize(oldWidth, oldHeight);
@@ -220,7 +268,9 @@ function createWindow() {
 	});
 
 	ipcMain.on("saveSettings", function (event, settings) {
+		console.log(JSON.stringify(settings));
 		const storageFile = app.getPath('appData') + path.sep + "settings.json";
+		console.log(storageFile);
 		fs.writeFileSync(storageFile, JSON.stringify(settings));
 	});
 
@@ -233,6 +283,18 @@ function createWindow() {
 		saveConfiguration();
 	});
 	videoWindow.on("move", () => {
+		saveConfiguration();
+	});
+	videoWindow2.on("resized", () => {
+		saveConfiguration();
+	});
+	videoWindow2.on("move", () => {
+		saveConfiguration();
+	});
+	videoWindow3.on("resized", () => {
+		saveConfiguration();
+	});
+	videoWindow3.on("move", () => {
 		saveConfiguration();
 	});
 
@@ -278,6 +340,8 @@ function createWindow() {
 	});
 
 	captureWindow.webContents.on("did-finish-load", function () {
+		// captureWindow.openDevTools();
+
 		captureCurrentScreen();
 		captureWindow.webContents.send("position", captureWindow.getPosition()[0], captureWindow.getPosition()[1]);
 	});
@@ -290,6 +354,12 @@ function createWindow() {
 			const content = fs.readFileSync(storageFile).toString();
 			videoWindow.webContents.send("avatar", content);
 		};
+	});
+	videoWindow2.webContents.on("did-finish-load", function() {
+		videoWindow2.webContents.send("path", app.getAppPath());
+	});
+	videoWindow3.webContents.on("did-finish-load", function() {
+		videoWindow3.webContents.send("path", app.getAppPath());
 	});
 }
 
