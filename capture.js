@@ -73,9 +73,17 @@ console.log("Register handler for set source");
 
 ipcRenderer.on("settings", async (event, s) => {
     storage = s;
-    if (s.recordSystemAudio) {
-        systemSelect.value = s.recordSystemAudio;
-    }
+    setTimeout(() => {
+        if (s.recordSystemAudio) {
+            if (s.recordSystemAudio === "yes") {
+                systemSelect.selectedIndex = 0;
+            }
+            if (s.recordSystemAudio === "no") {
+                systemSelect.selectedIndex = 1;
+            }
+        }
+    }, 1000);
+
     if (s.countdown) {
         systemSelect.value = "" + s.countdown;
     }
@@ -176,7 +184,7 @@ function startRecording() {
     if (countdown === 0) {
         ipcRenderer.send("preRecording");
 
-        countdown = storage.countdown ? storage.countdown : 5;
+        countdown = storage.countdown !== undefined ? storage.countdown : 5;
         showCountdownOrStart();
     }
 }
@@ -202,7 +210,7 @@ function startRecordingStreams() {
 
     canvas = document.createElement("canvas");
     canvas.width = Math.floor(window.innerWidth / 2) * 2;
-    canvas.height =  Math.floor(window.innerHeight / 2) * 2;
+    canvas.height = Math.floor(window.innerHeight / 2) * 2;
     ctx = canvas.getContext("2d");
     video.requestVideoFrameCallback(copyFrame);
 
