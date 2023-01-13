@@ -187,6 +187,20 @@
 			height: 200px;
 		}
 
+		#saving {
+			position: absolute;
+			left: 50%;
+			top: 50%;
+			transform: translate(-50%, -50%);
+			display: flex;
+			flex-direction: column;
+			height: 50px;
+			display: none;
+			background: black;
+			color: white;
+			padding: 40px;
+		}
+
 		#settings {
 			position: absolute;
 			left: 50%;
@@ -194,7 +208,7 @@
 			transform: translate(-50%, -50%);
 			display: flex;
 			flex-direction: column;
-			height: 200px;
+			height: 300px;
 			display: none;
 		}
 
@@ -225,6 +239,9 @@
 			<div class="grip"></div>
 		</div>
 
+		<div id="saving">
+			Saving Video
+		</div>
 		<div id="controls">
 			<div id="record" class="optionButton">
 				Start Recording
@@ -257,6 +274,10 @@
 				<option value="3">3 seconds</option>
 				<option value="5" selected="true">5 seconds</option>
 				<option value="10">10 seconds</option>
+			</select>
+			<select id="format" class="optionButton deviceButton">
+				<option value="mp4">Save as MP4</option>
+				<option value="webm">Save as WebM</option>
 			</select>
 			<div id="back" class="optionButton">
 				Back

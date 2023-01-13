@@ -299,26 +299,31 @@ function createWindow() {
 	});
 
 	ipcMain.on("saveFile", (event, contents) => {
-		const defaultPath = "recording-" + (Date.now()) + ".mp4";
+		console.log("Saving as : " +contents.format);
+		const defaultPath = "recording-" + (Date.now()) + (contents.format !== "webm" ? ".mp4" : ".webm");
 		const path = dialog.showSaveDialogSync(captureWindow, {
 			defaultPath: defaultPath
 		});
 
 		if (path) {
 			fs.writeFileSync(path+".webm", contents.data);
-			execFile(ffmpeg.path, [
-				'-i', path+'.webm', 
-				path
-			], (error, stdout, stderr) => {
-				if (error) {
-					console.error(`exec error: ${error}`);
-					return;
-				}
-				console.log(`stdout: ${stdout}`);
-				console.error(`stderr: ${stderr}`);
+			if (contents.format !== "webm") {
+				captureWindow.webContents.send("startSave");
+				execFile(ffmpeg.path, [
+					'-i', path+'.webm', 
+					path
+				], (error, stdout, stderr) => {
+					if (error) {
+						console.error(`exec error: ${error}`);
+						return;
+					}
+					console.log(`stdout: ${stdout}`);
+					console.error(`stderr: ${stderr}`);
 
-				fs.unlinkSync(path+".webm");
-			});
+					fs.unlinkSync(path+".webm");
+					captureWindow.webContents.send("endSave");
+				});
+			}
 		}
 	});
 
@@ -340,8 +345,6 @@ function createWindow() {
 	});
 
 	captureWindow.webContents.on("did-finish-load", function () {
-		// captureWindow.openDevTools();
-
 		captureCurrentScreen();
 		captureWindow.webContents.send("position", captureWindow.getPosition()[0], captureWindow.getPosition()[1]);
 	});

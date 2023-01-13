@@ -1,4 +1,5 @@
 const { ipcRenderer } = require('electron');
+const { format } = require('path');
 const Buffer = require('buffer').Buffer;
 let storage = {};
 
@@ -32,6 +33,7 @@ const videoSelect2 = document.getElementById("camera2");
 const videoSelect3 = document.getElementById("camera3");
 const countdownSelect = document.getElementById("countdown");
 const systemSelect = document.getElementById("systemAudio");
+const formatSelect = document.getElementById("format");
 const selectors = [audioInputSelect, videoSelect, videoSelect2, videoSelect3];
 
 let countdown = 0;
@@ -71,22 +73,28 @@ document.getElementById("quit").addEventListener("click", () => {
 
 console.log("Register handler for set source");
 
+ipcRenderer.on("startSave", async (event, s) => {
+    document.getElementById("controls").style.display = "none";
+    document.getElementById("saving").style.display = "flex";
+});
+
+ipcRenderer.on("endSave", async (event, s) => {
+    document.getElementById("controls").style.display = "flex";
+    document.getElementById("saving").style.display = "none";
+});
+
 ipcRenderer.on("settings", async (event, s) => {
     storage = s;
-    setTimeout(() => {
-        if (s.recordSystemAudio) {
-            if (s.recordSystemAudio === "yes") {
-                systemSelect.selectedIndex = 0;
-            }
-            if (s.recordSystemAudio === "no") {
-                systemSelect.selectedIndex = 1;
-            }
-        }
-    }, 1000);
-
-    if (s.countdown) {
-        systemSelect.value = "" + s.countdown;
+    if (s.recordSystemAudio) {
+        systemSelect.value = s.recordSystemAudio;
     }
+    if (s.countdown) {
+        countdownSelect.value = s.countdown;
+    }
+    if (s.format) {
+        formatSelect.value = s.format;
+    }
+
     navigator.mediaDevices.enumerateDevices().then(gotDevices).catch(handleEnumError);
 });
 
@@ -166,7 +174,8 @@ async function save() {
         type: "video/webm"
     });
     ipcRenderer.send("saveFile", {
-        data: Buffer.from(await blob.arrayBuffer())
+        data: Buffer.from(await blob.arrayBuffer()),
+        format: storage.format
     });
 }
 
@@ -184,7 +193,7 @@ function startRecording() {
     if (countdown === 0) {
         ipcRenderer.send("preRecording");
 
-        countdown = storage.countdown !== undefined ? storage.countdown : 5;
+        countdown = storage.countdown !== undefined ? Number.parseInt(storage.countdown) : 5;
         showCountdownOrStart();
     }
 }
@@ -268,7 +277,9 @@ function cancelRecording() {
     startingControls.style.display = "none";
 
     recording = false;
-    mediaRecorder.stop();
+    if (mediaRecorder) {
+        mediaRecorder.stop();
+    }
     ipcRenderer.send("stopRecording");
 }
 
@@ -378,8 +389,9 @@ function start() {
     storage.video = videoSelect.options[videoSelect.selectedIndex].innerHTML;
     storage.video2 = videoSelect2.options[videoSelect2.selectedIndex].innerHTML;
     storage.video3 = videoSelect3.options[videoSelect3.selectedIndex].innerHTML;
-    storage.countdown = Number.parseInt(countdownSelect.value);
+    storage.countdown = countdownSelect.value;
     storage.recordSystemAudio = systemSelect.value;
+    storage.format = formatSelect.value;
     ipcRenderer.send("saveSettings", storage);
 
     const videoSource = videoSelect.value;
@@ -428,3 +440,4 @@ videoSelect2.onchange = start;
 videoSelect3.onchange = start;
 countdownSelect.onchange = start;
 systemSelect.onchange = start;
+formatSelect.onchange = start;
