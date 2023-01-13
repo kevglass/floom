@@ -170,6 +170,11 @@ function handleDataAvailable(event) {
 }
 
 async function save() {
+    if (recordedChunks.length === 0) {
+        alert("Failed to record - no data was recorded.");
+        return;
+    }
+
     const blob = new Blob(recordedChunks, {
         type: "video/webm"
     });
@@ -261,6 +266,9 @@ function startRecordingStreams() {
             mediaRecorder = new MediaRecorder(cutStream, options);
         }
         mediaRecorder.ondataavailable = handleDataAvailable;
+        mediaRecorder.onerror = (e) => {
+            alert("Media Recorder Error: " + e);
+        };
         mediaRecorder.start();
     }, 250);
 }
