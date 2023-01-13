@@ -306,11 +306,13 @@ function createWindow() {
 		});
 
 		if (path) {
-			fs.writeFileSync(path+".webm", contents.data);
+			const webmPath = contents.format !== "webm" ? path+".webm" : path;
+
+			fs.writeFileSync(webmPath, contents.data);
 			if (contents.format !== "webm") {
 				captureWindow.webContents.send("startSave");
 				execFile(ffmpeg.path, [
-					'-i', path+'.webm', 
+					'-i', webmPath, 
 					path
 				], (error, stdout, stderr) => {
 					if (error) {
@@ -320,7 +322,7 @@ function createWindow() {
 					console.log(`stdout: ${stdout}`);
 					console.error(`stderr: ${stderr}`);
 
-					fs.unlinkSync(path+".webm");
+					fs.unlinkSync(webmPath);
 					captureWindow.webContents.send("endSave");
 				});
 			}
